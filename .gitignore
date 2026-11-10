@@ -1,0 +1,12 @@
+node_modules
+dist
+.DS_Store
+*.local
+.testdata
+.deploy-cache/
+# local runtime state & deployment secrets (see .env.example)
+.wrangler/
+.env
+.env.*
+!.env.example
+.dev.vars*

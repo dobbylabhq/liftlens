@@ -1,0 +1,327 @@
+[
+  {
+    "id": "ipf-2026-squat",
+    "title": "IPF Technical Rulebook 2026 v3 · §4.1 Squat",
+    "authors": "International Powerlifting Federation",
+    "year": 2026,
+    "url": "https://www.powerlifting.sport/fileadmin/ipf/data/rules/technical-rules/english/2026_IPF_Technical_Rulebook__effective_01_March_2026__v3.pdf",
+    "kind": "rulebook",
+    "lifts": [
+      "squat"
+    ],
+    "takeaway": "髋关节处大腿上表面须低于膝顶；起止膝锁定；底部不得二次弹震；上升途中不得下降；脚不得移动。",
+    "verified": true
+  },
+  {
+    "id": "ipf-2026-bench",
+    "title": "IPF Technical Rulebook 2026 v3 · §4.2 Bench Press",
+    "authors": "International Powerlifting Federation",
+    "year": 2026,
+    "url": "https://www.powerlifting.sport/fileadmin/ipf/data/rules/technical-rules/english/2026_IPF_Technical_Rulebook__effective_01_March_2026__v3.pdf",
+    "kind": "rulebook",
+    "lifts": [
+      "bench"
+    ],
+    "takeaway": "头、肩、臀全程贴凳，脚全掌着地；握距 ≤81cm；杠须触胸/腹并静止，肘关节下沿须与肩关节上沿齐平或更低；推起过程中杠不得下降；结束时肘锁定。",
+    "verified": true
+  },
+  {
+    "id": "ipf-2026-deadlift",
+    "title": "IPF Technical Rulebook 2026 v3 · §4.3 Deadlift",
+    "authors": "International Powerlifting Federation",
+    "year": 2026,
+    "url": "https://www.powerlifting.sport/fileadmin/ipf/data/rules/technical-rules/english/2026_IPF_Technical_Rulebook__effective_01_March_2026__v3.pdf",
+    "kind": "rulebook",
+    "lifts": [
+      "deadlift"
+    ],
+    "takeaway": "结束时膝锁定、肩后收（前三角肌在杠铃垂线之后）；到终点前杠不得下降；不得用大腿托杠（hitching）；脚不得移动。",
+    "verified": true
+  },
+  {
+    "id": "nsca-essentials-4e",
+    "title": "Essentials of Strength Training and Conditioning, 4th ed.",
+    "authors": "Haff G.G., Triplett N.T. (eds.), NSCA",
+    "year": 2016,
+    "url": "https://us.humankinetics.com/products/essentials-of-strength-training-and-conditioning-4th-edition",
+    "kind": "textbook",
+    "lifts": [
+      "all"
+    ],
+    "takeaway": "NSCA 体能教练（CSCS）标准教材：动作技术教学、五点接触、呼吸与腹内压、训练计划设计。",
+    "verified": true
+  },
+  {
+    "id": "nsca-technique-4e",
+    "title": "Exercise Technique Manual for Resistance Training, 4th ed.",
+    "authors": "NSCA",
+    "year": 2021,
+    "url": "https://us.humankinetics.com/products/exercise-technique-manual-for-resistance-training-4th-edition-epub",
+    "kind": "textbook",
+    "lifts": [
+      "all"
+    ],
+    "takeaway": "约 100 个抗阻动作的技术检查点（起始姿势、下放、推起），适合作为动作清单的依据。",
+    "verified": true
+  },
+  {
+    "id": "acsm-2009",
+    "title": "Progression Models in Resistance Training for Healthy Adults (Position Stand)",
+    "authors": "American College of Sports Medicine",
+    "year": 2009,
+    "url": "https://pubmed.ncbi.nlm.nih.gov/19204579/",
+    "kind": "position",
+    "lifts": [
+      "all"
+    ],
+    "takeaway": "当能比目标次数多做 1–2 次时加重 2–10%；新手每周 2–3 次、中级 3–4 次、高级 4–5 次。",
+    "verified": true
+  },
+  {
+    "id": "green-comfort-2007",
+    "title": "The Affect of Grip Width on Bench Press Performance and Risk of Injury",
+    "authors": "Green C.M., Comfort P.",
+    "year": 2007,
+    "url": "https://doi.org/10.1519/00126548-200710000-00001",
+    "kind": "review",
+    "lifts": [
+      "bench"
+    ],
+    "takeaway": "握距 >1.5 倍双肩峰宽与肩部损伤风险相关；≤1.5 倍时 1RM 差异不超过约 5%。",
+    "verified": true
+  },
+  {
+    "id": "fees-1998",
+    "title": "Upper extremity weight-training modifications for the injured athlete",
+    "authors": "Fees M., Decker T., Snyder-Mackler L., Axe M.J.",
+    "year": 1998,
+    "url": "https://pubmed.ncbi.nlm.nih.gov/9784824/",
+    "kind": "review",
+    "lifts": [
+      "bench"
+    ],
+    "takeaway": "肩伤人群的卧推调整：收窄握距、限制下放深度、调整起止位置。",
+    "verified": true
+  },
+  {
+    "id": "lehman-2005",
+    "title": "The influence of grip width and forearm pronation/supination on upper-body myoelectric activity during the flat bench press",
+    "authors": "Lehman G.J.",
+    "year": 2005,
+    "url": "https://pubmed.ncbi.nlm.nih.gov/16095407/",
+    "kind": "study",
+    "lifts": [
+      "bench"
+    ],
+    "takeaway": "窄握时三头肌激活升高。",
+    "verified": true
+  },
+  {
+    "id": "larsen-2021",
+    "title": "Larsen, Gomo & van den Tillaar 2021 · Front Sports Act Living（卧推握距）",
+    "authors": "Larsen S., Gomo O., van den Tillaar R.",
+    "year": 2021,
+    "url": "https://doi.org/10.3389/fspor.2020.637066",
+    "kind": "study",
+    "lifts": [
+      "bench"
+    ],
+    "takeaway": "1RM：宽握 109.8kg ≈ 中握 108.9kg > 窄握 103.7kg；宽、中握的水平肩力矩更大。",
+    "verified": true
+  },
+  {
+    "id": "noteboom-2024",
+    "title": "Noteboom et al. 2024 · Frontiers in Physiology（握距与肩胛后收对肩关节负荷）",
+    "authors": "Noteboom L. et al.",
+    "year": 2024,
+    "url": "https://pubmed.ncbi.nlm.nih.gov/38974522/",
+    "kind": "study",
+    "lifts": [
+      "bench"
+    ],
+    "takeaway": "握距 <1.5 倍肩宽时肩锁关节负荷降低；配合肩胛后收可降低盂肱关节后向剪力。",
+    "verified": true
+  },
+  {
+    "id": "schick-2010",
+    "title": "Schick et al. 2010 · J Strength Cond Res 24(3)（史密斯机 vs 自由杠铃卧推）",
+    "authors": "Schick E.E. et al.",
+    "year": 2010,
+    "url": "https://pubmed.ncbi.nlm.nih.gov/20093960/",
+    "kind": "study",
+    "lifts": [
+      "bench"
+    ],
+    "takeaway": "自由杠铃时三角肌中束激活更高；胸大肌、三角肌前束无差异。",
+    "verified": true
+  },
+  {
+    "id": "saeterbakken-2011",
+    "title": "Saeterbakken, van den Tillaar & Fimland 2011 · J Sports Sci 29(5)（史密斯机/自由杠铃/哑铃卧推 EMG）",
+    "authors": "Saeterbakken A.H., van den Tillaar R., Fimland M.S.",
+    "year": 2011,
+    "url": "https://pubmed.ncbi.nlm.nih.gov/21225489/",
+    "kind": "study",
+    "lifts": [
+      "bench"
+    ],
+    "takeaway": "稳定性需求越高，肱二头肌激活越高；胸大肌无差异。",
+    "verified": true
+  },
+  {
+    "id": "schoenfeld-2010",
+    "title": "Squatting kinematics and kinetics and their application to exercise performance",
+    "authors": "Schoenfeld B.J.",
+    "year": 2010,
+    "url": "https://pubmed.ncbi.nlm.nih.gov/20182386/",
+    "kind": "review",
+    "lifts": [
+      "squat"
+    ],
+    "takeaway": "深蹲运动学与动力学综述：深度、站距、躯干角度与膝/髋负荷的关系。",
+    "verified": true
+  },
+  {
+    "id": "escamilla-2001",
+    "title": "Knee biomechanics of the dynamic squat exercise",
+    "authors": "Escamilla R.F.",
+    "year": 2001,
+    "url": "https://pubmed.ncbi.nlm.nih.gov/11194098/",
+    "kind": "review",
+    "lifts": [
+      "squat"
+    ],
+    "takeaway": "正确执行的深蹲不会损害膝关节稳定性；膝屈 0–50° 时膝受力最低，适合康复阶段。",
+    "verified": true
+  },
+  {
+    "id": "fry-2003",
+    "title": "Effect of knee position on hip and knee torques during the barbell squat",
+    "authors": "Fry A.C., Smith J.C., Schilling B.K.",
+    "year": 2003,
+    "url": "https://pubmed.ncbi.nlm.nih.gov/14636100/",
+    "kind": "study",
+    "lifts": [
+      "squat"
+    ],
+    "takeaway": "限制膝前移会把负荷大幅转移到髋/下背——“膝盖不能过脚尖”不应作为一刀切的错误。",
+    "verified": true
+  },
+  {
+    "id": "escamilla-2000",
+    "title": "A three-dimensional biomechanical analysis of sumo and conventional style deadlifts",
+    "authors": "Escamilla R.F. et al.",
+    "year": 2000,
+    "url": "https://pubmed.ncbi.nlm.nih.gov/10912892/",
+    "kind": "study",
+    "lifts": [
+      "deadlift"
+    ],
+    "takeaway": "传统硬拉杠铃垂直行程与做功比相扑多约 25–40%；两种姿势髋力矩相当。",
+    "verified": true
+  },
+  {
+    "id": "escamilla-2002",
+    "title": "An electromyographic analysis of sumo and conventional style deadlifts",
+    "authors": "Escamilla R.F. et al.",
+    "year": 2002,
+    "url": "https://pubmed.ncbi.nlm.nih.gov/11932579/",
+    "kind": "study",
+    "lifts": [
+      "deadlift"
+    ],
+    "takeaway": "相扑硬拉股内肌、股外肌、胫骨前肌 EMG 更高。",
+    "verified": true
+  },
+  {
+    "id": "bengtsson-2022",
+    "title": "Bengtsson et al. 2022 · Int J Sports Phys Ther 17(6)（硬拉腰椎运动学）",
+    "authors": "Bengtsson V. et al.",
+    "year": 2022,
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9528690",
+    "kind": "study",
+    "lifts": [
+      "deadlift"
+    ],
+    "takeaway": "从站立到硬拉起始，下腰前凸减少约 20°——“完全中立”不现实，应看相对变化而非绝对值。",
+    "verified": true
+  },
+  {
+    "id": "wilk-2019",
+    "title": "Wilk et al. 2019 · J Sports Sci Med 18（离心节奏与向心功率）",
+    "authors": "Wilk M. et al.",
+    "year": 2019,
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6543996/",
+    "kind": "study",
+    "lifts": [
+      "all"
+    ],
+    "takeaway": "离心节奏影响后续向心功率：6s 下放比 2s 下放向心平均功率更低（402W vs 468W）。",
+    "verified": true
+  },
+  {
+    "id": "zatsiorsky-2021",
+    "title": "Science and Practice of Strength Training, 3rd ed.",
+    "authors": "Zatsiorsky V.M., Kraemer W.J., Fry A.C.",
+    "year": 2021,
+    "url": "https://us.humankinetics.com/products/science-and-practice-of-strength-training-3rd-edition",
+    "kind": "textbook",
+    "lifts": [
+      "all"
+    ],
+    "takeaway": "东欧传统的周期化理论：训练负荷、恢复与超量补偿、技术稳定性优先。",
+    "verified": true
+  },
+  {
+    "id": "cs231n-2024",
+    "title": "Automating Powerlifting Judging through Keypoint Detection (Stanford CS231n project)",
+    "authors": "Stanford CS231n 2024 student project",
+    "year": 2024,
+    "url": "https://cs231n.stanford.edu/2024/papers/automating-powerlifting-judging-through-keypoint-detection.pdf",
+    "kind": "study",
+    "lifts": [
+      "all"
+    ],
+    "takeaway": "用关键点不等式自动判定 IPF 规则：深蹲 hip_y>knee_y、卧推 elbow_y>shoulder_y；用最近关节代替杠铃；判对率 79–86%。本项目的判定方法参考它。",
+    "verified": true
+  },
+  {
+    "id": "china-fitness-guide-2018",
+    "title": "全民健身指南",
+    "authors": "国家体育总局",
+    "year": 2018,
+    "url": "https://govt.chinadaily.com.cn/s/201807/31/WS5d0f7b37498e12256565e636/quan-min-jian-shen-zhi-nan-quanmin-jianshen-zhinan-national-fitness-guidance.html",
+    "kind": "position",
+    "lifts": [
+      "all"
+    ],
+    "takeaway": "大众健身的运动强度、频率与安全原则；力量训练章节细节未逐条核实。",
+    "verified": false
+  },
+  {
+    "id": "sanchez-medina-2011",
+    "title": "Velocity loss as an indicator of neuromuscular fatigue during resistance training",
+    "authors": "Sánchez-Medina L, González-Badillo JJ",
+    "year": 2011,
+    "url": "https://doi.org/10.1249/MSS.0b013e318213f880",
+    "kind": "study",
+    "lifts": [
+      "all"
+    ],
+    "takeaway": "组内动作速度损失与力竭程度、代谢疲劳高度相关：同一组里越往后推得越慢，说明离力竭越近，可用来调控每组还剩几次（RIR）。",
+    "verified": true
+  },
+  {
+    "id": "schoenfeld-grgic-2020",
+    "title": "Effects of range of motion on muscle development during resistance training interventions: A systematic review",
+    "authors": "Schoenfeld BJ, Grgic J",
+    "year": 2020,
+    "url": "https://doi.org/10.1177/2050312120901559",
+    "kind": "review",
+    "lifts": [
+      "all"
+    ],
+    "takeaway": "系统综述：多数研究中全幅度训练的肌肥大效果优于半程；做不满行程时先减重量保幅度。",
+    "verified": true
+  }
+]

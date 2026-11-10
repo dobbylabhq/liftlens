@@ -1,0 +1,6 @@
+export { VolumeFigure } from './VolumeFigure'
+export { SilhouetteFigure } from './SilhouetteFigure'
+export { LowPolyFigure } from './LowPolyFigure'
+export { MUSCLES } from './body'
+export { POSES, rawPose, rigPose, type Pose, type Rig, type J } from './poses'
+export type { FigureProps } from './useRepTimeline'

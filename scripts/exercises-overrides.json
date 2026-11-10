@@ -1,0 +1,17 @@
+{
+  "$comment": "id → 字段覆盖（pattern / unilateral / hold / big3）。pattern 可设 null；布尔字段设 false 表示去掉。note 只是说明，不进产物。",
+  "0675": { "pattern": "hinge", "note": "reverse hyper extension (on stability ball)：被「extension (」误判成臂屈伸" },
+  "0172": { "pattern": null, "note": "cable incline pushdown：目标背阔，实为上斜直臂下压，不是臂屈伸" },
+  "1343": { "pattern": null, "note": "exercise ball prone leg raise：俯卧后举腿（下背/臀），不是卷腹" },
+  "0223": { "pattern": null, "note": "cable side crunch：侧向卷腹，侧面视角看不清" },
+  "0756": { "pattern": null, "note": "smith hip raise：目标 abs，动作含义不明确，宁可不分析" },
+  "1421": { "pattern": null, "note": "modified push up to lower arms：俯卧撑与前臂撑交替，多段动作" },
+  "0097": { "pattern": null, "note": "barbell side split squat v.2：侧向分腿（冠状面）" },
+  "0098": { "pattern": null, "note": "barbell side split squat：侧向分腿（冠状面）" },
+  "0547": { "unilateral": true, "note": "kettlebell seesaw press：左右交替推" },
+  "0153": { "pattern": "vertical-pull", "note": "cable cross-over lateral pulldown：被 cross-over（夹胸）规则误杀" },
+  "1743": { "pattern": "horizontal-push", "note": "dumbbell twisting bench press：twisting 只是转腕，仍是卧推" },
+  "1759": { "unilateral": true, "note": "single leg squat (pistol)" },
+  "3195": { "unilateral": false, "note": "lever lying two-one leg curl：双腿起、单腿放（离心），两腿都参与，不按单侧计次" },
+  "3769": { "pattern": "lunge", "unilateral": true, "note": "curtsey squat：交叉后撤步，归单腿" }
+}

@@ -1,0 +1,12 @@
+{
+  "name": "liftlens",
+  "private": true,
+  "scripts": {
+    "setup": "npm --prefix web install && npm --prefix agent install",
+    "dev": "node agent/src/cli.mjs start --no-open & npm --prefix web run dev",
+    "agent": "node agent/src/cli.mjs start --no-open",
+    "web": "npm --prefix web run dev",
+    "build": "npm --prefix web run build"
+  },
+  "license": "MIT"
+}
