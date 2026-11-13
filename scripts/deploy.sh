@@ -2,7 +2,7 @@
 # Deploy LiftLens to Cloudflare (Workers static assets — the successor of Pages).
 #
 #   scripts/deploy.sh                       # worker "app" (name in wrangler.jsonc)
-#   SITE=https://liftlens.example.com scripts/deploy.sh   # custom domain
+#   SITE=https://liftlens.example.com scripts/deploy.sh   # custom domain (zone on the same account)
 #
 # What gets deployed is a static site: the web app + the local-agent tarball
 # (so users can run `npx -y https://<site>/agent/liftlens-agent.tgz` without an npm account).
@@ -20,12 +20,19 @@ if [ -f "$ROOT/.env" ]; then set -a; . "$ROOT/.env"; set +a; fi
 echo "▸ account"
 $WRANGLER whoami | grep -E "logged in|Account" || true
 
-# 1) site URL: explicit SITE, or learned from a first deploy (workers.dev subdomain)
-deploy() { $WRANGLER deploy --config "$ROOT/wrangler.jsonc" 2>&1 | tee /dev/stderr | grep -oE "https://[a-z0-9.-]+\.workers\.dev" | head -1; }
-
+# 1) site URL: explicit SITE / LIFTLENS_SITE. A custom domain is attached to the Worker on deploy
+#    (the zone must be on the same Cloudflare account); a workers.dev URL is corrected from the
+#    deploy output on the first run.
 SITE="${SITE:-${LIFTLENS_SITE:-}}"
 [ -n "$SITE" ] || { echo "✗ set LIFTLENS_SITE=https://<your-site> in .env (see .env.example)"; exit 1; }
+SITE="${SITE%/}"
 export LIFTLENS_SITE="$SITE"   # the web build reads it for SEO tags (canonical, og:url, sitemap)
+HOST="${SITE#*://}"; HOST="${HOST%%/*}"
+case "$HOST" in
+  *.workers.dev) DOMAIN_ARGS=() ;;
+  *) DOMAIN_ARGS=(--domain "$HOST") ;;
+esac
+deploy() { $WRANGLER deploy --config "$ROOT/wrangler.jsonc" ${DOMAIN_ARGS[@]+"${DOMAIN_ARGS[@]}"} 2>&1 | tee /dev/stderr | { grep -oE "https://[a-z0-9.-]+\.workers\.dev" || true; } | head -1; }
 echo "▸ site: $SITE"
 
 # 2) build the web app
@@ -61,7 +68,7 @@ rm -rf "$TMP"
 # 5) deploy (twice on the very first run: once to learn the URL, once with the agent tarball baked for it)
 echo "▸ deploy"
 URL="$(deploy)"
-if [ -z "${SITE_FIXED:-}" ] && [ -n "$URL" ] && [ "$URL" != "$SITE" ]; then
+if [ -z "${SITE_FIXED:-}" ] && [ ${#DOMAIN_ARGS[@]} -eq 0 ] && [ -n "$URL" ] && [ "$URL" != "$SITE" ]; then
   echo "▸ site URL is $URL — repacking agent for it"
   SITE="$URL" SITE_FIXED=1 exec "$0"
 fi
