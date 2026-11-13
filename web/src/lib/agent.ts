@@ -21,8 +21,15 @@ interface AgentState {
   health: AgentHealth | null
   load: () => Promise<void>
   save: (url: string, token: string) => Promise<void>
-  check: () => Promise<void>
+  /**
+   * Probe the agent on this computer. Without `force`, only browsers that were paired before are
+   * probed: a public page calling 127.0.0.1 makes browsers ask for local-network permission, and
+   * phones can never reach a local agent anyway.
+   */
+  check: (force?: boolean) => Promise<void>
 }
+
+const TOUCH = typeof matchMedia !== 'undefined' && matchMedia('(pointer: coarse)').matches
 
 export const useAgent = create<AgentState>((set, get) => ({
   url: 'http://127.0.0.1:4517',
@@ -41,8 +48,12 @@ export const useAgent = create<AgentState>((set, get) => ({
     set({ url, token })
     await get().check()
   },
-  check: async () => {
+  check: async (force = false) => {
     const { url, token } = get()
+    if (!force && (TOUCH || !token)) {
+      set({ status: 'offline', health: null })
+      return
+    }
     try {
       const h = (await (await fetch(`${url}/health`, { signal: AbortSignal.timeout(2500) })).json()) as AgentHealth
       const r = await fetch(`${url}/coaches`, { headers: { 'x-liftlens-token': token } })

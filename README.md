@@ -64,7 +64,7 @@ Open [liftlens.dobbylab.com](https://liftlens.dobbylab.com) (or your own deploym
 ### Develop
 
 ```bash
-git clone https://github.com/Tzyito/liftlens.git && cd liftlens
+git clone https://github.com/dobbylabhq/liftlens.git && cd liftlens
 npm run setup   # install web + agent dependencies
 npm run dev     # web on http://localhost:5180 + local agent on 127.0.0.1:4517
 ```

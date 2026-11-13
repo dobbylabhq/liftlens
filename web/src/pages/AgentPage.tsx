@@ -46,7 +46,8 @@ export default function AgentPage() {
   // while waiting for the user to run the command, poll so the page flips to "connected" by itself
   useEffect(() => {
     if (ready || mode !== 'agent' || TOUCH) return
-    const id = setInterval(() => check(), 2000)
+    check(true)
+    const id = setInterval(() => check(true), 2000)
     return () => clearInterval(id)
   }, [ready, mode, check])
 
@@ -131,7 +132,7 @@ export default function AgentPage() {
                   <button className="btn-acid" onClick={() => save(u, t).then(() => toast(useAgent.getState().status === 'ready' ? '已连接' : '连接失败，请检查地址和配对码'))}>
                     连接
                   </button>
-                  <button onClick={() => check()} className="flex items-center gap-1 text-xs text-dim hover:text-fg sm:col-span-3">
+                  <button onClick={() => check(true)} className="flex items-center gap-1 text-xs text-dim hover:text-fg sm:col-span-3">
                     <RefreshCw size={12} /> 重新检测
                   </button>
                 </div>

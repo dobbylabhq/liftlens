@@ -45,7 +45,7 @@
 ### 开发
 
 ```bash
-git clone https://github.com/Tzyito/liftlens.git && cd liftlens
+git clone https://github.com/dobbylabhq/liftlens.git && cd liftlens
 npm run setup   # 安装 web 和 agent 依赖
 npm run dev     # 网页 http://localhost:5180 + 本地 agent 127.0.0.1:4517
 ```
