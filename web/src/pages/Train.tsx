@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { AnimatePresence, motion } from 'motion/react'
-import { Camera, Check, ChevronRight, ClipboardPaste, Flag, ImagePlus, Loader2, Minus, PencilLine, Plus, Radio, Search, Timer, Trash2 } from 'lucide-react'
+import { Camera, Check, ChevronRight, ClipboardPaste, Flag, HardDrive, ImagePlus, Loader2, Minus, PencilLine, Plus, Radio, Search, Timer, Trash2 } from 'lucide-react'
 import { ExercisePicker } from '../components/ExercisePicker'
 import { LiveSet, type LiveResult } from '../components/LiveSet'
 import { ALIAS_IDS, BIG3_IDS, getExercise, loadExercises, searchExercises } from '../lib/exercises'
@@ -10,7 +10,7 @@ import { BIG3_PATTERN, refOf, type ExerciseRef } from '../lib/exerciseRef'
 import { PATTERNS } from '../lib/movement/patterns'
 import type { ExerciseInfo } from '../lib/movement/types'
 import { toast } from 'sonner'
-import { db, getSetting, todayISO } from '../lib/db'
+import { db, getSetting, setSetting, todayISO } from '../lib/db'
 import { type Phase } from '../lib/pipeline'
 import { cancelJobs, dismissJob, enqueueAnalysis, previews, setLiveActive, useAnalysisQueue } from '../lib/analysisQueue'
 import type { PoseModelId } from '../lib/pose'
@@ -139,8 +139,9 @@ function PlanEditor() {
       <div className="kicker">TRAINING</div>
       <h1 className="font-display mt-1 text-3xl font-bold tracking-tight sm:text-4xl">开始今天的训练</h1>
       <p className="mt-2 text-sm text-mute">
-        先填好计划，练的时候每组用手机拍一段（或开实时模式边练边数），组间就能看到这一组的问题和下一组建议。动作库有 1300+ 个动作，800 多个支持视频分析。分析都在手机上完成，视频不会上传。
+        先填好计划，练的时候每组用手机拍一段（或开实时模式边练边数），组间就能看到这一组的问题和下一组建议。不想拍也行：训练中切到「只记录」，每组记下重量和次数，当训练日志用。动作库有 1300+ 个动作，800 多个支持视频分析。
       </p>
+      <DataNote className="mt-3" />
 
       <div className="card mt-6 p-4">
         <div className="kicker mb-2 flex items-center gap-1.5">
@@ -291,6 +292,7 @@ function ActiveWorkout({ w, onFinish }: { w: Workout; onFinish: (id: number) => 
       setParams({}, { replace: true })
     })
   }, [params, setParams, w])
+  const logOnly = useLiveQuery(() => getSetting(LOG_ONLY_KEY, false), [], false)
   const next = nextSet(w)
   const [sel, setSel] = useState<Sel | null>(next)
   // Don't auto-advance when the selected set completes (show the result first); with no selection, follow the next set
@@ -355,7 +357,20 @@ function ActiveWorkout({ w, onFinish }: { w: Workout; onFinish: (id: number) => 
       <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-panel-2">
         <motion.div className="h-full bg-acid" animate={{ width: `${(done / Math.max(1, total)) * 100}%` }} />
       </div>
-      <div className="mt-1.5 flex justify-end">
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+        <div className="grid grid-cols-2 gap-1 rounded-xl border border-line bg-ink-2 p-1 text-xs" role="tablist" aria-label="每组的记录方式">
+          {([false, true] as const).map((v) => (
+            <button
+              key={String(v)}
+              role="tab"
+              aria-selected={logOnly === v}
+              onClick={() => setSetting(LOG_ONLY_KEY, v)}
+              className={`rounded-lg px-3 py-1.5 transition-colors ${logOnly === v ? 'bg-panel-2 text-fg' : 'text-mute hover:text-fg'}`}
+            >
+              {v ? '只记录' : '拍视频分析'}
+            </button>
+          ))}
+        </div>
         <button className="flex items-center gap-1 text-xs text-dim hover:text-bad" onClick={discard}>
           <Trash2 size={12} /> 放弃这次训练（不记录）
         </button>
@@ -418,6 +433,7 @@ function ActiveWorkout({ w, onFinish }: { w: Workout; onFinish: (id: number) => 
             const id = w.items[cur.item]?.sets[cur.set]?.sessionId
             return id != null ? byId.get(id) : undefined
           })()}
+          logOnly={logOnly}
           onSave={(patch) => saveSet(cur, patch)}
           onNext={() => setSel(nextSet(w))}
         />
@@ -430,7 +446,27 @@ function ActiveWorkout({ w, onFinish }: { w: Workout; onFinish: (id: number) => 
           </button>
         </div>
       )}
+      <DataNote className="mt-8" />
     </div>
+  )
+}
+
+/** per-browser preference: log sets by hand by default instead of filming them */
+const LOG_ONLY_KEY = 'train.logOnly'
+
+/** Where training data lives — said plainly wherever the user creates it. */
+function DataNote({ className = '' }: { className?: string }) {
+  return (
+    <p className={`flex items-start gap-1.5 text-xs leading-relaxed text-dim ${className}`}>
+      <HardDrive size={12} className="mt-0.5 shrink-0" />
+      <span>
+        训练计划、每组记录和拍的视频只保存在<b className="font-medium text-mute">这个浏览器</b>里（本地数据库），不会上传到任何服务器。换手机、换浏览器或清除网站数据会丢失，记得在
+        <Link to="/journal" className="text-acid hover:underline">
+          训练日志
+        </Link>
+        里导出备份。
+      </span>
+    </p>
   )
 }
 
@@ -468,19 +504,22 @@ function SetPanel({
   w,
   at,
   session,
+  logOnly,
   onSave,
   onNext,
 }: {
   w: Workout
   at: Sel
   session: Session | undefined
+  logOnly: boolean
   onSave: (patch: Partial<PlannedSet>) => Promise<unknown>
   onNext: () => void
 }) {
   const item = w.items[at.item]
   const planned = item.sets[at.set]
   const [kg, setKg] = useState<number | null>(planned.weightKg)
-  const [manual, setManual] = useState(false)
+  // "只记录" mode starts every set on manual entry; a single set can still be filmed
+  const [manual, setManual] = useState(logOnly)
   const [manualReps, setManualReps] = useState(planned.reps)
   const preview = useRef<HTMLCanvasElement>(null)
   const isLast = at.set === item.sets.length - 1
@@ -619,7 +658,7 @@ function SetPanel({
             </div>
           </div>
 
-          {canAnalyze ? (
+          {canAnalyze && !manual ? (
             <>
               <div className="mt-4 grid gap-2 sm:grid-cols-2">
                 {livePattern && (
@@ -655,21 +694,28 @@ function SetPanel({
                 机位：{item.exercise?.pattern ? PATTERNS[item.exercise.pattern].camera.tip : '侧面、能拍到全身和杠铃'}。开始前按录制，做完再停。
               </p>
             </>
-          ) : (
+          ) : canAnalyze ? null : (
             <p className="mt-3 text-sm text-mute">这个动作暂不支持视频分析（{item.exercise ? '动作库里没有它的动作模式' : '不在动作库里'}），做完直接记录。</p>
           )}
 
           {manual || !canAnalyze ? (
-            <div className="mt-4 flex items-center gap-2">
-              <span className="text-sm text-mute">完成</span>
-              <div className="w-36">
-                <NumField label="" value={manualReps} step={hold ? 5 : 1} onChange={(v) => setManualReps(Math.max(0, v))} />
+            <>
+              <div className="mt-4 flex items-center gap-2">
+                <span className="text-sm text-mute">完成</span>
+                <div className="w-36">
+                  <NumField label="" value={manualReps} step={hold ? 5 : 1} onChange={(v) => setManualReps(Math.max(0, v))} />
+                </div>
+                <span className="text-sm text-mute">{unit}</span>
+                <button className="btn-acid ml-auto" onClick={() => onSave({ done: true, repsDone: manualReps, weightKg: kg, at: Date.now() }).then(onNext)}>
+                  <Check size={16} /> 记录
+                </button>
               </div>
-              <span className="text-sm text-mute">{unit}</span>
-              <button className="btn-acid ml-auto" onClick={() => onSave({ done: true, repsDone: manualReps, weightKg: kg, at: Date.now() }).then(onNext)}>
-                <Check size={16} /> 记录
-              </button>
-            </div>
+              {canAnalyze && (
+                <button className="mt-3 flex items-center gap-1 text-sm text-dim hover:text-fg" onClick={() => setManual(false)}>
+                  <Camera size={13} /> 这组想拍一下（视频分析）
+                </button>
+              )}
+            </>
           ) : (
             <button className="mt-3 flex items-center gap-1 text-sm text-dim hover:text-fg" onClick={() => setManual(true)}>
               <PencilLine size={13} /> 这组不拍，直接记录{hold ? '秒数' : '次数'}
