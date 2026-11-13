@@ -8,6 +8,8 @@
 
 姿态识别、杠铃追踪和计次全部在浏览器里完成。教练点评由你选的 AI 完成：填自己的 key 调用云端 API，或者用电脑上已登录的 Claude Code / Codex。
 
+**[在线使用 → liftlens.dobbylab.com](https://liftlens.dobbylab.com)**
+
 [English](README.md) · 简体中文
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-c8ff3d.svg)](LICENSE)
@@ -33,7 +35,7 @@
 
 ### 使用
 
-打开线上站点或你自己部署的站点，在「AI 教练」里选择点评方式：
+打开 [liftlens.dobbylab.com](https://liftlens.dobbylab.com)（或你自己部署的站点），在「AI 教练」里选择点评方式：
 
 | | 需要 |
 |---|---|
@@ -43,7 +45,7 @@
 ### 开发
 
 ```bash
-git clone <本仓库> && cd liftlens
+git clone https://github.com/Tzyito/liftlens.git && cd liftlens
 npm run setup   # 安装 web 和 agent 依赖
 npm run dev     # 网页 http://localhost:5180 + 本地 agent 127.0.0.1:4517
 ```

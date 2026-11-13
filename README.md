@@ -8,6 +8,8 @@
 
 Pose estimation, bar tracking and rep counting run entirely in the browser. Coach reviews come from the AI *you* choose: a cloud API with your own key, or the Claude Code / Codex already logged in on your computer.
 
+**[Try it → liftlens.dobbylab.com](https://liftlens.dobbylab.com)**
+
 English · [简体中文](README.zh-CN.md)
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-c8ff3d.svg)](LICENSE)
@@ -52,7 +54,7 @@ The program does the **measuring**; the coach does the **judging**. Keeping the 
 
 ### Use it
 
-Open the hosted app, or your own deployment (see [Deploy](#deploy)), then pick how the coach runs under **AI Coach**:
+Open [liftlens.dobbylab.com](https://liftlens.dobbylab.com) (or your own deployment, see [Deploy](#deploy)), then pick how the coach runs under **AI Coach**:
 
 | | What you need |
 |---|---|
@@ -62,7 +64,7 @@ Open the hosted app, or your own deployment (see [Deploy](#deploy)), then pick h
 ### Develop
 
 ```bash
-git clone <this repo> && cd liftlens
+git clone https://github.com/Tzyito/liftlens.git && cd liftlens
 npm run setup   # install web + agent dependencies
 npm run dev     # web on http://localhost:5180 + local agent on 127.0.0.1:4517
 ```
