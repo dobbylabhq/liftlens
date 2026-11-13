@@ -20,7 +20,7 @@ function site(): Plugin {
       const u = url()
       this.emitFile({ type: 'asset', fileName: 'robots.txt', source: `User-agent: *\nAllow: /\nDisallow: /lab/\n${u ? `Sitemap: ${u}/sitemap.xml\n` : ''}` })
       if (!u) return
-      const pages = ['/', '/exercises', '/train', '/new', '/coaches', '/agent']
+      const pages = ['/', '/exercises', '/train', '/new', '/coaches', '/agent', '/privacy']
       this.emitFile({
         type: 'asset',
         fileName: 'sitemap.xml',

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Download, HardDrive, Loader2, ShieldCheck, Upload } from 'lucide-react'
+import { Link } from 'react-router'
 import { toast } from 'sonner'
 import { downloadBackup, importBackup, requestPersist, storageInfo } from '../lib/backup'
 
@@ -22,7 +23,10 @@ export function BackupPanel() {
       </div>
       <p className="text-sm text-mute">
         训练记录只存在这个浏览器里。换手机、换电脑或清理浏览器前，先导出一份备份，在新设备上导入即可。
-        备份包含训练记录、测量结果、曲线和教练点评，<b className="font-medium text-fg">不含视频</b>，文件很小。
+        备份包含训练记录、测量结果、曲线和教练点评，<b className="font-medium text-fg">不含视频和 API key</b>，文件很小。{' '}
+        <Link to="/privacy" className="text-acid hover:underline">
+          数据存在哪儿？
+        </Link>
       </p>
       <div className="mt-4 flex flex-wrap gap-2">
         <button

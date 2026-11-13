@@ -71,6 +71,7 @@ const AgentPage = P.agent.Page
 const FigureLab = lazy(() => import('./pages/FigureLab'))
 const MuscleLab = lazy(() => import('./pages/MuscleLab'))
 const LiveLab = lazy(() => import('./pages/LiveLab'))
+const Privacy = lazy(() => import('./pages/Privacy'))
 
 const NAV = [
   { to: '/train', label: '训练中', short: '训练', Icon: Timer },
@@ -299,6 +300,7 @@ export const router = createBrowserRouter([
       { path: '/progress', element: <Progress /> },
       { path: '/coaches', element: <Coaches /> },
       { path: '/agent', element: <AgentPage /> },
+      { path: '/privacy', element: <Privacy /> },
       { path: '/lab/figures', element: <FigureLab /> },
       { path: '/lab/muscles', element: <MuscleLab /> },
       { path: '/lab/live', element: <LiveLab /> },

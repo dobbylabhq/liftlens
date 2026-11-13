@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { Check, ChevronDown, Copy, Loader2, Power, RefreshCw, ShieldCheck, Terminal } from 'lucide-react'
+import { Link } from 'react-router'
 import { toast } from 'sonner'
 import { AGENT_CMD, useAgent } from '../lib/agent'
 import { CoachEnginePicker, type Mode } from '../components/RuntimePicker'
@@ -69,7 +70,10 @@ export default function AgentPage() {
         <div className="mt-6 flex items-start gap-3 rounded-2xl border border-line p-4 text-xs text-mute">
           <ShieldCheck size={16} className="mt-0.5 shrink-0 text-cyan" />
           <div>
-            隐私：API key 和训练记录一样只存在这个浏览器里。每次点评只把测量数据和几张关键帧（已叠加骨架，不含原视频）从浏览器直接发给你选的厂商，费用按你自己的账户计。
+            隐私：API key 和训练记录一样只存在这个浏览器里。每次点评只把测量数据和几张关键帧（已叠加骨架，不含原视频）从浏览器直接发给你选的厂商，费用按你自己的账户计。{' '}
+            <Link to="/privacy" className="text-acid hover:underline">
+              隐私说明
+            </Link>
           </div>
         </div>
       ) : TOUCH ? (

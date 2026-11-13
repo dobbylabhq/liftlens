@@ -122,10 +122,20 @@ Both engines are mapped to the MediaPipe 33-point layout, so lifter selection an
 
 ## Privacy
 
-- Videos and training logs are stored only in your browser.
-- A coach review sends measurements and a few annotated key frames — never the video — to the coach you picked: straight from the browser to the provider (cloud API), or to the agent on your own computer.
-- API keys stay in the browser (cloud API) or in `~/.liftlens/config.json` with mode 0600 (local agent).
-- The local agent listens on `127.0.0.1` only and requires a pairing token. It is never reachable from the network, and the hosted site never sees its traffic.
+LiftLens has no accounts and no backend database. The full policy is on the [privacy page](https://liftlens.dobbylab.com/privacy) (Chinese).
+
+**Where your data lives.** Training plans, logged sets, videos, key frames, analysis results, coach reviews, your optional profile (height, body weight, training age, goal, injuries) and settings — including cloud API keys — are stored only in the current browser's IndexedDB. Nothing is uploaded to the LiftLens site. Clearing site data, switching browser or device, or using a private window loses it; export a backup from the training log (JSON, without videos or API keys) and import it elsewhere.
+
+**When data leaves your device.** Only when you ask the AI coach for a review, and only to the coach you picked:
+
+- **Cloud API** — the browser sends measurements, a few skeleton-annotated key frames and your profile straight to the provider you chose, with your own key. That provider's privacy policy applies.
+- **Local agent** — the same content goes to the agent on your own computer (listens on `127.0.0.1` only, requires a pairing token), which calls the Claude Code / Codex / … you are logged in to.
+
+The original video is never sent. Logging sets without videos, or not asking for a review, sends nothing.
+
+**What the site itself sees.** The site is static files on Cloudflare, which handles normal request data such as IP addresses. Pose models and fonts are downloaded from Google (MediaPipe, Google Fonts), jsDelivr and Hugging Face. There are no analytics, ads or tracking cookies.
+
+**Local agent files.** `~/.liftlens/` holds the pairing token, runtime settings and API keys (`config.json`, mode 0600), the coach skills cache and a log. Delete the folder to remove them.
 
 ## Limitations
 

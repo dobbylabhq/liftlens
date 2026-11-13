@@ -317,6 +317,16 @@ export default function Home() {
       <AgentTerminal />
       <footer className="border-t border-line py-10 text-center text-xs text-dim">
         LiftLens 提供的是训练参考，不构成医疗建议。有疼痛请先咨询医生或物理治疗师。
+        <div className="mt-2">
+          训练数据只存在你的浏览器里 ·{' '}
+          <Link to="/privacy" className="text-mute underline-offset-2 hover:text-fg hover:underline">
+            隐私说明
+          </Link>{' '}
+          ·{' '}
+          <a href="https://github.com/dobbylabhq/liftlens" target="_blank" rel="noreferrer" className="text-mute underline-offset-2 hover:text-fg hover:underline">
+            GitHub
+          </a>
+        </div>
       </footer>
     </>
   )

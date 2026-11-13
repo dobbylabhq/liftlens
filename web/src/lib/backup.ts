@@ -4,7 +4,8 @@ import type { PlannedSet, Workout } from './workout'
 
 /**
  * Backup = workout records + analysis results + coach feedback + ability reports + profile/preferences.
- * Excluded: videos, keyframe images, per-frame skeletons (only useful for video replay), agent pairing code (tied to one computer).
+ * Excluded: videos, keyframe images, per-frame skeletons (only useful for video replay), agent pairing code (tied to one computer)
+ * and cloud API keys (a backup file gets copied around; keys must not travel with it).
  * Format is plain JSON so users can keep or inspect it themselves.
  */
 export const BACKUP_FORMAT = 'liftlens-backup'
@@ -23,6 +24,9 @@ interface Backup {
 }
 
 const PRIVATE_SETTINGS = new Set(['agentUrl', 'agentToken'])
+/** cloud provider settings (`cloud.<id>`): keep model / base URL, drop the API key */
+const stripSecrets = (s: Setting): Setting =>
+  s.key.startsWith('cloud.') && s.value && typeof s.value === 'object' ? { ...s, value: { ...(s.value as Record<string, unknown>), apiKey: '' } } : s
 const dedupeKey = (s: Pick<Session, 'createdAt' | 'lift'>) => `${s.createdAt}|${s.lift}`
 
 export async function buildBackup(): Promise<Backup> {
@@ -40,7 +44,7 @@ export async function buildBackup(): Promise<Backup> {
     sessions: sessions as Backup['sessions'],
     clips: clips.map(({ video: _v, keyframes: _k, pose: _p, ...rest }) => rest as BackupClip),
     reports,
-    settings: settings.filter((s) => !PRIVATE_SETTINGS.has(s.key)),
+    settings: settings.filter((s) => !PRIVATE_SETTINGS.has(s.key)).map(stripSecrets),
     workouts,
   }
 }
@@ -130,7 +134,7 @@ export async function importBackup(file: File): Promise<ImportResult> {
     // Preferences/profile: only fill in what's missing locally, never overwrite
     for (const s of data.settings ?? []) {
       if (PRIVATE_SETTINGS.has(s.key)) continue
-      if ((await db.settings.get(s.key)) === undefined) await db.settings.put(s)
+      if ((await db.settings.get(s.key)) === undefined) await db.settings.put(stripSecrets(s))
     }
     return { added, skipped, reports }
   })

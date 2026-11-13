@@ -426,7 +426,8 @@ function ActiveWorkout({ w, onFinish }: { w: Workout; onFinish: (id: number) => 
 
       {cur && (
         <SetPanel
-          key={`${cur.item}-${cur.set}`}
+          // remount on the record-mode switch so the open set follows it
+          key={`${cur.item}-${cur.set}-${logOnly}`}
           w={w}
           at={cur}
           session={(() => {
@@ -465,6 +466,9 @@ function DataNote({ className = '' }: { className?: string }) {
           训练日志
         </Link>
         里导出备份。
+        <Link to="/privacy" className="ml-1 text-mute underline-offset-2 hover:text-fg hover:underline">
+          隐私说明
+        </Link>
       </span>
     </p>
   )
