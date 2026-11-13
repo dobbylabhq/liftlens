@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Deploy LiftLens to Cloudflare (Workers static assets — the successor of Pages).
 #
-#   scripts/deploy.sh                       # worker "liftlens" (name in wrangler.jsonc)
+#   scripts/deploy.sh                       # worker "app" (name in wrangler.jsonc)
 #   SITE=https://liftlens.example.com scripts/deploy.sh   # custom domain
 #
 # What gets deployed is a static site: the web app + the local-agent tarball
@@ -25,6 +25,7 @@ deploy() { $WRANGLER deploy --config "$ROOT/wrangler.jsonc" 2>&1 | tee /dev/stde
 
 SITE="${SITE:-${LIFTLENS_SITE:-}}"
 [ -n "$SITE" ] || { echo "✗ set LIFTLENS_SITE=https://<your-site> in .env (see .env.example)"; exit 1; }
+export LIFTLENS_SITE="$SITE"   # the web build reads it for SEO tags (canonical, og:url, sitemap)
 echo "▸ site: $SITE"
 
 # 2) build the web app

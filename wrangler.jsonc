@@ -10,11 +10,5 @@
     // react-router BrowserRouter: unknown paths serve index.html
     "not_found_handling": "single-page-application",
     "run_worker_first": ["/assets/*"]
-  },
-  // v1 created the phone relay Durable Object; v2 deletes it (the relay was removed).
-  // Keep both tags so existing deployments migrate cleanly.
-  "migrations": [
-    { "tag": "v1", "new_sqlite_classes": ["Relay"] },
-    { "tag": "v2", "deleted_classes": ["Relay"] }
-  ]
+  }
 }
