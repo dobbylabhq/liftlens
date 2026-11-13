@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { Check, Cloud, Copy, Cpu, ExternalLink, Eye, EyeOff, Loader2, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
-import { ConnectComputer } from './PhoneLink'
 import { AGENT_CMD, fetchRuntimes, setRuntime, useAgent, type RuntimeInfo } from '../lib/agent'
 import {
   PROVIDERS,
@@ -83,7 +82,6 @@ export function CoachEnginePicker({ mode, onMode }: { mode: Mode; onMode: (m: Mo
   const status = useAgent((s) => s.status)
   const health = useAgent((s) => s.health)
   const check = useAgent((s) => s.check)
-  const via = useAgent((s) => s.via)
   const [live, setLive] = useState<RuntimeInfo[] | null>(null)
   const ready = status === 'ready'
   useEffect(() => {
@@ -113,7 +111,7 @@ export function CoachEnginePicker({ mode, onMode }: { mode: Mode; onMode: (m: Mo
               {m === 'cloud' ? '云端 API' : '本地 agent'}
               {(m === 'cloud' ? currentCloud : currentLocal) && <span className="h-1.5 w-1.5 rounded-full bg-acid" />}
             </span>
-            <span className="mt-0.5 block text-[11px] leading-snug text-dim">{m === 'cloud' ? '填 API key 就能用，手机也行' : TOUCH ? '扫码连接你电脑上的 Claude Code 等' : '用电脑上已登录的 Claude Code 等'}</span>
+            <span className="mt-0.5 block text-[11px] leading-snug text-dim">{m === 'cloud' ? '填 API key 就能用，手机也行' : TOUCH ? '需要在电脑上打开这个网页' : '用电脑上已登录的 Claude Code 等'}</span>
           </button>
         ))}
       </div>
@@ -131,9 +129,9 @@ export function CoachEnginePicker({ mode, onMode }: { mode: Mode; onMode: (m: Mo
       ) : (
         <>
           {TOUCH && (
-            <div className="mb-3">
-              <ConnectComputer />
-            </div>
+            <p className="mb-3 rounded-xl border border-warn/40 px-3 py-2.5 text-xs leading-relaxed text-mute">
+              本地 agent 只能在<b className="font-medium text-fg">同一台电脑</b>的浏览器里使用（网页直接访问本机 127.0.0.1）。在手机上请改用<b className="font-medium text-fg">云端 API</b>。
+            </p>
           )}
           <Chips
             items={LOCAL.map((l) => ({ id: l.id, label: l.label }))}
@@ -146,7 +144,6 @@ export function CoachEnginePicker({ mode, onMode }: { mode: Mode; onMode: (m: Mo
             id={localId}
             info={live?.find((r) => r.id === localId)}
             ready={ready}
-            remote={via === 'relay'}
             current={localId === currentLocal}
             onUse={async () => {
               try {
@@ -273,7 +270,7 @@ function CloudForm({ providerId, current }: { providerId: string; current: boole
   )
 }
 
-function LocalPanel({ id, info, ready, remote, current, onUse }: { id: string; info?: RuntimeInfo; ready: boolean; remote: boolean; current: boolean; onUse: () => void }) {
+function LocalPanel({ id, info, ready, current, onUse }: { id: string; info?: RuntimeInfo; ready: boolean; current: boolean; onUse: () => void }) {
   const l = LOCAL.find((x) => x.id === id)!
   const usable = !!info?.available
   return (
@@ -299,7 +296,7 @@ function LocalPanel({ id, info, ready, remote, current, onUse }: { id: string; i
         </li>
         <li>
           <div className="mb-1.5 text-xs text-mute">
-            2. 在电脑上启动 LiftLens 本地 agent{ready ? (remote ? '（已通过中继连接 ✓）' : '（已连接 ✓）') : TOUCH ? '，再用手机扫电脑页面上的二维码' : '，它会自动和这个页面配对'}
+            2. 在电脑上启动 LiftLens 本地 agent{ready ? '（已连接 ✓）' : '，它会自动和这个页面配对'}
           </div>
           {!ready && <CopyLine cmd={AGENT_CMD} />}
         </li>

@@ -1,7 +1,6 @@
 {
   // LiftLens: static site on Cloudflare Workers (static assets). Videos and training logs stay in the
-  // user's browser. The only server-side code is worker/index.js: a 404 guard for /assets/* and an
-  // end-to-end encrypted WebSocket relay (/relay/*) between a phone and the user's own computer.
+  // user's browser. The only server-side code is worker/index.js: a 404 guard for /assets/*.
   "name": "app",
   "compatibility_date": "2026-11-01",
   "main": "./worker/index.js",
@@ -10,10 +9,12 @@
     "binding": "ASSETS",
     // react-router BrowserRouter: unknown paths serve index.html
     "not_found_handling": "single-page-application",
-    "run_worker_first": ["/assets/*", "/relay/*"]
+    "run_worker_first": ["/assets/*"]
   },
-  "durable_objects": {
-    "bindings": [{ "name": "RELAY", "class_name": "Relay" }]
-  },
-  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Relay"] }]
+  // v1 created the phone relay Durable Object; v2 deletes it (the relay was removed).
+  // Keep both tags so existing deployments migrate cleanly.
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["Relay"] },
+    { "tag": "v2", "deleted_classes": ["Relay"] }
+  ]
 }

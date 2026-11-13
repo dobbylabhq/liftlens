@@ -119,8 +119,7 @@ async function start({ open = true } = {}) {
   const url = pairUrl()
   if (open && openBrowser(url)) ok('已在浏览器打开 LiftLens，自动完成配对')
   else info(`在浏览器打开以完成配对：\n    ${c.acid(url)}`)
-  console.log(`\n  ${c.dim('想开机自动运行？在刚才的命令后面加上')} ${c.acid('install')} ${c.dim('再运行一次 · Ctrl+C 退出')}`)
-  console.log(`  ${c.dim('想在手机上用？在命令后面加上')} ${c.acid('phone')} ${c.dim('显示二维码，或在电脑网页的「本地 agent」里扫码')}\n`)
+  console.log(`\n  ${c.dim('想开机自动运行？在刚才的命令后面加上')} ${c.acid('install')} ${c.dim('再运行一次 · Ctrl+C 退出')}\n`)
 }
 
 function copyApp() {
@@ -267,28 +266,6 @@ async function pair({ rotate = false } = {}) {
   console.log()
 }
 
-/** QR code + link for connecting a phone to this computer through the encrypted relay */
-async function phoneCmd({ rotate = false } = {}) {
-  banner()
-  const { relayCreds, relayEnabled, relayLink, RELAY_ORIGIN } = await import('./relay.mjs')
-  if (!relayEnabled()) {
-    bad(`中继未启用（LIFTLENS_RELAY=0 或没有站点地址 ${RELAY_ORIGIN || ''}）`)
-    return
-  }
-  if (rotate) {
-    relayCreds({ rotate: true })
-    ok('已生成新的手机连接码；用旧码连接的手机全部失效')
-    if (await health()) info(`正在运行的 agent 需要重启才会用新码：Ctrl+C 后重新运行，或后台服务运行一次 ${c.acid('install')}`)
-  }
-  const link = relayLink()
-  const QR = (await import('qrcode')).default
-  console.log(await QR.toString(link, { type: 'terminal', small: true, errorCorrectionLevel: 'L' }))
-  ok('用手机相机扫上面的二维码，在 LiftLens 里就能用这台电脑上的 agent 点评')
-  info(`或者在手机 LiftLens「本地 agent › 连接电脑」里粘贴连接码：\n    ${c.acid(link.split('#relay=')[1])}`)
-  info(c.dim('经端到端加密的中继转发：不用开端口，手机和电脑不必在同一网络；连接码等同于密码，不要发给别人'))
-  console.log()
-}
-
 async function runtimesCmd() {
   banner()
   const list = await listRuntimes()
@@ -345,7 +322,6 @@ function help() {
   ${c.acid('npx liftlens-agent status')}      查看运行状态
   ${c.acid('npx liftlens-agent pair')}        重新打开配对链接（--rotate 重新生成配对码）
   ${c.acid('npx liftlens-agent uninstall')}   移除后台服务
-  ${c.acid('npx liftlens-agent phone')}       显示二维码，让手机连接这台电脑（--rotate 换一个连接码）
   ${c.acid('npx liftlens-agent runtimes')}    列出可用的 agent / 模型（本地 + 云端）
   ${c.acid('npx liftlens-agent use <id>')}    切换默认 agent，可带 --model --key --base-url --region --project
 
@@ -371,9 +347,6 @@ switch (cmd) {
     break
   case 'status':
     await status()
-    break
-  case 'phone':
-    await phoneCmd({ rotate: flags.has('--rotate') })
     break
   case 'runtimes':
     await runtimesCmd()

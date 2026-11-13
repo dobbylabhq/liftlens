@@ -5,8 +5,6 @@ import { toast } from 'sonner'
 import { AGENT_CMD, useAgent } from '../lib/agent'
 import { CoachEnginePicker, type Mode } from '../components/RuntimePicker'
 import { useCoachEngine } from '../lib/cloud'
-import { PhoneQR } from '../components/PhoneLink'
-import { Smartphone } from 'lucide-react'
 
 const TOUCH = typeof matchMedia !== 'undefined' && matchMedia('(pointer: coarse)').matches
 
@@ -31,7 +29,7 @@ function Cmd({ cmd, hint }: { cmd: string; hint?: string }) {
 }
 
 export default function AgentPage() {
-  const { url, token, status, health, via, save, check } = useAgent()
+  const { url, token, status, health, save, check } = useAgent()
   const engine = useCoachEngine()
   const [u, setU] = useState(url)
   const [t, setT] = useState(token)
@@ -77,7 +75,7 @@ export default function AgentPage() {
         <div className="mt-6 flex items-start gap-3 rounded-2xl border border-line p-4 text-xs text-mute">
           <ShieldCheck size={16} className="mt-0.5 shrink-0 text-cyan" />
           <div>
-            手机通过 LiftLens 中继连接你的电脑：只需电脑主动连出，不用开端口，手机和电脑不必在同一网络。内容端到端加密，中继看不到训练数据和关键帧。
+            本地 agent 运行在你的电脑上，只接受同一台电脑上浏览器的请求（127.0.0.1）。在手机上点评请改用云端 API；或者在电脑上打开这个页面。
           </div>
         </div>
       ) : (
@@ -100,15 +98,6 @@ export default function AgentPage() {
             </div>
             {!ready && <Loader2 size={16} className="animate-spin text-dim" />}
           </motion.div>
-
-          {ready && via === 'local' && (
-            <div className="card mt-4 p-5">
-              <div className="mb-3 flex items-center gap-2 font-semibold">
-                <Smartphone size={14} className="text-acid" /> 在手机上用这台电脑的 agent
-              </div>
-              <PhoneQR />
-            </div>
-          )}
 
           <div className="card mt-4 p-5">
             <div className="mb-1 flex items-center gap-2 font-semibold">

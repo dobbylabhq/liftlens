@@ -6,7 +6,7 @@
 
 **Film a set, get measured. Your own AI coach reviews it — your videos never leave your device.**
 
-Pose estimation, bar tracking and rep counting run entirely in the browser. Coach reviews come from the AI *you* choose: a cloud API with your own key, or the Claude Code / Codex already logged in on your computer — even from your phone.
+Pose estimation, bar tracking and rep counting run entirely in the browser. Coach reviews come from the AI *you* choose: a cloud API with your own key, or the Claude Code / Codex already logged in on your computer.
 
 English · [简体中文](README.zh-CN.md)
 
@@ -26,7 +26,6 @@ English · [简体中文](README.zh-CN.md)
 - **Bring your own coach** — five coaching "skills" (IPF referee, NSCA-CSCS, Eastern-European periodisation, rehab PT, general fitness) run on:
   - a **cloud API** straight from the browser (Claude, OpenAI, Gemini, OpenRouter, Qwen, Doubao, Kimi, SiliconFlow, DeepSeek or any OpenAI-compatible endpoint), or
   - a **local agent** on your computer that drives Claude Code, Codex CLI, Gemini CLI, Qwen Code, OpenCode, Ollama or LM Studio.
-- **Phone ⇄ computer relay** — scan a QR code and your phone uses the agent on your computer, from any network. End-to-end encrypted (AES-256-GCM); the relay only sees ciphertext.
 - **Local-first** — training logs and videos live in the browser's IndexedDB. Export / import backups as JSON. Installable as a PWA.
 - **Progress** — estimated 1RM and form-score trends, recurring faults, weekly muscle map, and an AI progress report.
 
@@ -38,11 +37,11 @@ English · [简体中文](README.zh-CN.md)
 │ Bar tracker ─► bar path + rep segmentation             │      cloud API (your key)
 │ Rule engine ─► findings + sourceIds                    │ ───────────────────────────► Claude / OpenAI / …
 │ IndexedDB ───► training log, videos                    │
-└───────────────┬────────────────────────▲───────────────┘
+└───────────────┬────────────────────────────────────────┘
                 │ measurements + key frames (no video)
-                ▼                        │
-  ┌──── Local agent (agent/) ────┐       │   phone? ── E2E-encrypted relay (worker/) ──┐
-  │ 127.0.0.1:4517, pairing token│ ◄─────┴─────────────────────────────────────────────┘
+                ▼
+  ┌──── Local agent (agent/) ────┐
+  │ 127.0.0.1:4517, pairing token│   same computer only
   │ Claude Code / Codex / Ollama │
   └──────────────────────────────┘
 ```
@@ -58,8 +57,7 @@ Open the hosted app, or your own deployment (see [Deploy](#deploy)), then pick h
 | | What you need |
 |---|---|
 | **Cloud API** | An API key from any supported provider. Works on phones. |
-| **Local agent** | Node.js 20+ and a logged-in Claude Code / Codex / … on your computer. Run the one-line `npx` command shown on that page. |
-| **Phone → your computer** | The local agent running, then scan the QR code shown on the computer. |
+| **Local agent** | Node.js 20+ and a logged-in Claude Code / Codex / … on your computer. Run the one-line `npx` command shown on that page. Works in a browser on the same computer only (the page talks to `127.0.0.1`). |
 
 ### Develop
 
@@ -76,21 +74,20 @@ npm run dev     # web on http://localhost:5180 + local agent on 127.0.0.1:4517
 | `npm run build` | Production build of the web app |
 | `cd web && npx tsc -b && npm run lint` | Type-check and lint |
 
-Optional: copy `.env.example` to `.env` (and `web/.env.local`) to point local development at a hosted relay.
+No configuration is needed for local development.
 
 ### Local agent CLI
 
 ```bash
 npx -y <site>/agent/liftlens-agent.tgz            # start and pair with the browser
 npx -y <site>/agent/liftlens-agent.tgz install    # run in the background, start at login (macOS / Linux)
-npx -y <site>/agent/liftlens-agent.tgz phone      # QR code to use this computer from your phone
 npx -y <site>/agent/liftlens-agent.tgz use <id>   # switch runtime, e.g. `use qwen --key … --model …`
 npx -y <site>/agent/liftlens-agent.tgz runtimes   # list runtimes and their status
 ```
 
 ## Deploy
 
-LiftLens is a static site plus one small Worker (asset guard + relay) on Cloudflare Workers.
+LiftLens is a static site on Cloudflare Workers. The only server-side code is a tiny Worker that returns 404 for missing `/assets/*` chunks. There is no backend: nothing about your users' AI, keys or training data passes through your deployment.
 
 ```bash
 cp .env.example .env          # set LIFTLENS_SITE to your workers.dev / custom domain
@@ -98,16 +95,16 @@ npx wrangler login
 scripts/deploy.sh             # builds the web app, packs the agent, deploys
 ```
 
-The deploy script also publishes the coach skills and a versioned agent tarball next to the app, so users can run the agent with `npx` without an npm account.
+The deploy script also publishes the coach skills and a versioned agent tarball next to the app, so users can run the agent with `npx` without an npm account. Users of your deployment run that tarball on their own computers, so they trust the code you deploy; anyone who prefers not to can clone the repo and run `npm run agent` instead.
 
 ## Project structure
 
 ```
 liftlens/
 ├── web/        React 19 + Vite + Tailwind app
-│   └── src/lib/      pose models, rule engine (analyze.ts), movement patterns, cloud runner, relay client
-├── agent/      local agent: Hono server, runtimes, relay client, CLI
-├── worker/     Cloudflare Worker: asset 404 guard + Durable Object relay
+│   └── src/lib/      pose models, rule engine (analyze.ts), movement patterns, cloud runner, agent client
+├── agent/      local agent: Hono server, runtimes, CLI
+├── worker/     Cloudflare Worker: asset 404 guard
 ├── coaches/    coach skills (SKILL.md + references) and shared protocol, metrics, sources
 └── scripts/    deploy, data builders (exercise library, muscle map)
 ```
@@ -126,7 +123,7 @@ Both engines are mapped to the MediaPipe 33-point layout, so lifter selection an
 - Videos and training logs are stored only in your browser.
 - A coach review sends measurements and a few annotated key frames — never the video — to the coach you picked: straight from the browser to the provider (cloud API), or to the agent on your own computer.
 - API keys stay in the browser (cloud API) or in `~/.liftlens/config.json` with mode 0600 (local agent).
-- The local agent listens on `127.0.0.1` only and requires a pairing token. The phone relay is end-to-end encrypted; its key exists only in the QR code.
+- The local agent listens on `127.0.0.1` only and requires a pairing token. It is never reachable from the network, and the hosted site never sees its traffic.
 
 ## Limitations
 

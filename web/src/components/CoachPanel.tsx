@@ -35,7 +35,6 @@ export function CoachPanel({
   cta?: string
 }) {
   const status = useAgent((s) => s.status)
-  const relayAgentOffline = useAgent((s) => s.relayAgentOffline)
   const engine = useCoachEngine()
   const configs = useCloudConfigs()
   const navigate = useNavigate()
@@ -115,13 +114,11 @@ export function CoachPanel({
               去设置
             </Link>
           </div>
-        ) : !canRun && (TOUCH || relayAgentOffline) ? (
+        ) : !canRun && TOUCH ? (
           <div className="space-y-3 text-sm">
-            <p className="text-mute">
-              {relayAgentOffline ? '连接的电脑现在不在线（睡眠了或 agent 没在运行）。' : '在手机上点评：连接你电脑上的 agent，或填一个云端 API key。'}
-            </p>
+            <p className="text-mute">在手机上点评：填一个云端 API key（本地 agent 只能在电脑的浏览器里用）。</p>
             <Link to="/agent#runtimes" className="btn-acid h-10 w-full">
-              {relayAgentOffline ? '查看连接 / 改用云端 API' : '去设置'}
+              去设置
             </Link>
           </div>
         ) : !canRun ? (

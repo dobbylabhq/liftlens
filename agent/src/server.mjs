@@ -23,8 +23,6 @@ import { coachesDir, syncCoaches, syncState } from './sync.mjs'
 import { currentRuntimeId, listRuntimes, readConfig, runtimeById, writeConfig } from './runtimes.mjs'
 import { runWithAiSdk } from './ai-run.mjs'
 import { runWithCli } from './cli-run.mjs'
-import { RELAY_ORIGIN, relayCreds, relayEnabled, relayLink, relayState, startRelay } from './relay.mjs'
-import { encodeCode } from './relay-proto.mjs'
 
 const TOKEN = readToken()
 const runtimes = detectRuntimes()
@@ -79,15 +77,6 @@ app.post('/shutdown', (c) => {
   setTimeout(() => process.exit(0), 150)
   return c.json({ ok: true })
 })
-
-/**
- * GET /relay-info — the connect code for phones (shown as a QR code on the computer's web page).
- * Only reachable with the pairing token, i.e. from a browser on this computer.
- * Rotate with `liftlens-agent phone --rotate`.
- */
-app.get('/relay-info', (c) =>
-  c.json({ enabled: relayEnabled(), relay: RELAY_ORIGIN, code: encodeCode(relayCreds()), link: relayLink(), connected: relayState.connected, phones: relayState.clients }),
-)
 
 /** GET /runtimes — every supported agent/model runtime, availability, current default (no secrets) */
 app.get('/runtimes', async (c) => c.json(await listRuntimes()))
@@ -287,7 +276,6 @@ export function startServer() {
   return new Promise((resolve, reject) => {
     const server = serve({ fetch: app.fetch, port: PORT, hostname: '127.0.0.1' }, () => {
       syncCoaches({ force: true }).then((r) => r.updated && console.log(`[skills] 已同步到 ${r.version}（之前 ${r.from}）`))
-      startRelay({ log: (m) => console.log(m) }).catch((e) => console.log(`[relay] 未启动：${e.message}`))
       resolve(server)
     })
     server.on('error', reject)
