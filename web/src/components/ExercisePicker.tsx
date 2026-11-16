@@ -106,8 +106,11 @@ export function ExerciseBrowser({
   autoFocusDelay,
   listClassName,
   className = 'flex min-h-0 flex-1 flex-col',
+  collapsible = false,
 }: {
   onPick: (ex: ExerciseInfo) => void
+  /** inline use: only the search box until it's focused / typed in; folds back up after a pick */
+  collapsible?: boolean
   /** focus the search box after this many ms; omit to leave focus alone */
   autoFocusDelay?: number
   /** sizing of the scrolling list, e.g. `max-h-96` inline or `flex-1` in a sheet */
@@ -124,6 +127,16 @@ export function ExerciseBrowser({
   const [active, setActive] = useState(0)
   /** row whose movement preview is expanded */
   const [open, setOpen] = useState<string | null>(null)
+  const [expanded, setExpanded] = useState(!collapsible)
+  const pick = (e: ExerciseInfo) => {
+    if (collapsible) {
+      setQuery('')
+      setOpen(null)
+      setExpanded(false)
+      inputRef.current?.blur()
+    }
+    onPick(e)
+  }
   const toggle = (id: string) => setOpen((o) => (o === id ? null : id))
   const inputRef = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
@@ -185,7 +198,7 @@ export function ExerciseBrowser({
     const io = new IntersectionObserver((es) => es[0]?.isIntersecting && setLimit((l) => l + PAGE), { root: listRef.current, rootMargin: '400px' })
     io.observe(el)
     return () => io.disconnect()
-  }, [list, results.length, limit])
+  }, [list, results.length, limit, expanded])
 
   const scrollToActive = (i: number) => {
     const el = listRef.current?.querySelector<HTMLElement>(`[data-idx="${i}"]`)
@@ -204,7 +217,7 @@ export function ExerciseBrowser({
       const e = shown[active]
       if (e) {
         ev.preventDefault()
-        onPick(e)
+        pick(e)
       }
     }
   }
@@ -227,14 +240,15 @@ export function ExerciseBrowser({
           className="input pl-9 pr-10 text-base sm:text-sm"
           placeholder="搜索：卧推、哑铃弯举、row、rdl…"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => (setQuery(e.target.value), setExpanded(true))}
+          onFocus={() => setExpanded(true)}
           onKeyDown={onKeyDown}
           enterKeyHint="search"
           autoComplete="off"
           autoCorrect="off"
           spellCheck={false}
           role="combobox"
-          aria-expanded="true"
+          aria-expanded={expanded}
           aria-controls={listId}
           aria-autocomplete="list"
           aria-activedescendant={shown.length ? optionId(active) : undefined}
@@ -244,7 +258,14 @@ export function ExerciseBrowser({
             <X size={15} />
           </button>
         )}
+        {collapsible && expanded && (
+          <button type="button" onClick={() => (setExpanded(false), setOpen(null), setQuery(''))} className="mt-2 flex items-center gap-1 text-xs text-dim hover:text-fg">
+            <ChevronUp size={13} /> 收起动作库
+          </button>
+        )}
       </div>
+      {expanded && (
+      <>
 
       {/* Filters: two rows of horizontally scrolling chips */}
       <div className="shrink-0 space-y-1.5 border-b border-line py-2">
@@ -292,7 +313,7 @@ export function ExerciseBrowser({
               <>
                 <SectionTitle>常用</SectionTitle>
                 {common.map((e, i) => (
-                  <Row key={`c-${e.id}`} e={e} idx={i} id={optionId(i)} active={active === i} onHover={setActive} onPick={onPick} open={open === `c-${e.id}`} onToggle={() => toggle(`c-${e.id}`)} />
+                  <Row key={`c-${e.id}`} e={e} idx={i} id={optionId(i)} active={active === i} onHover={setActive} onPick={pick} open={open === `c-${e.id}`} onToggle={() => toggle(`c-${e.id}`)} />
                 ))}
                 <SectionTitle>全部动作 · {results.length}</SectionTitle>
               </>
@@ -300,7 +321,7 @@ export function ExerciseBrowser({
             {filtering && results.length > 0 && <SectionTitle>{results.length} 个结果</SectionTitle>}
             {results.slice(0, limit).map((e, j) => {
               const i = commonCount + j
-              return <Row key={e.id} e={e} idx={i} id={optionId(i)} active={active === i} onHover={setActive} onPick={onPick} open={open === e.id} onToggle={() => toggle(e.id)} />
+              return <Row key={e.id} e={e} idx={i} id={optionId(i)} active={active === i} onHover={setActive} onPick={pick} open={open === e.id} onToggle={() => toggle(e.id)} />
             })}
             {filtering && results.length === 0 && (
               <div className="flex flex-col items-center gap-2 px-6 py-14 text-center">
@@ -318,6 +339,8 @@ export function ExerciseBrowser({
           </>
         )}
       </div>
+      </>
+      )}
     </div>
   )
 }

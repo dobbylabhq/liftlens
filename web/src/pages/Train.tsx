@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { AnimatePresence, motion } from 'motion/react'
-import { Camera, Check, ChevronRight, ChevronUp, ClipboardPaste, Flag, HardDrive, ImagePlus, Loader2, Minus, PencilLine, Play, Plus, Radio, Search, Timer, Trash2 } from 'lucide-react'
+import { ArrowDown, ArrowUp, Camera, Check, ChevronRight, ChevronUp, CopyPlus, ClipboardPaste, Flag, HardDrive, ImagePlus, Loader2, Minus, PencilLine, Play, Plus, Radio, Search, Timer, Trash2 } from 'lucide-react'
 import { ExerciseBrowser, ExercisePicker } from '../components/ExercisePicker'
 import { ExercisePreviewById } from '../components/ExercisePreview'
 import { LiveSet, type LiveResult } from '../components/LiveSet'
@@ -121,6 +121,21 @@ function PlanEditor() {
   const [picker, setPicker] = useState<number | null>(null)
   /** plan row whose movement preview is open */
   const [peek, setPeek] = useState<number | null>(null)
+  const move = (i: number, d: -1 | 1) => {
+    setRows((rs) => {
+      const j = i + d
+      if (j < 0 || j >= rs.length) return rs
+      const out = [...rs]
+      ;[out[i], out[j]] = [out[j], out[i]]
+      return out
+    })
+    setPeek((p) => (p === i ? i + d : p === i + d ? i : p))
+  }
+  /** duplicate right below, e.g. the same exercise again later with another weight */
+  const copy = (i: number) => {
+    setRows((rs) => [...rs.slice(0, i + 1), { ...rs[i] }, ...rs.slice(i + 1)])
+    setPeek((p) => (p != null && p > i ? p + 1 : p))
+  }
   const last = useLiveQuery(() => db.workouts.orderBy('createdAt').last(), [])
   const upd = (i: number, patch: Partial<Row>) => setRows((rs) => rs.map((r, j) => (j === i ? { ...r, ...patch } : r)))
 
@@ -229,6 +244,17 @@ function PlanEditor() {
                     <input className="input text-center font-mono" inputMode="decimal" placeholder="可不填" value={r.kg} onChange={(e) => upd(i, { kg: e.target.value.replace(/[^\d.]/g, '') })} />
                   </label>
                 </div>
+                <div className="mt-2 flex items-center justify-end gap-1 text-xs text-dim">
+                  <button aria-label="上移" disabled={i === 0} className="flex h-9 items-center gap-1 rounded-full px-2.5 hover:text-fg disabled:opacity-30" onClick={() => move(i, -1)}>
+                    <ArrowUp size={13} /> 上移
+                  </button>
+                  <button aria-label="下移" disabled={i === rows.length - 1} className="flex h-9 items-center gap-1 rounded-full px-2.5 hover:text-fg disabled:opacity-30" onClick={() => move(i, 1)}>
+                    <ArrowDown size={13} /> 下移
+                  </button>
+                  <button aria-label="复制这个动作" className="flex h-9 items-center gap-1 rounded-full px-2.5 hover:text-fg" onClick={() => copy(i)}>
+                    <CopyPlus size={13} /> 复制
+                  </button>
+                </div>
               </motion.div>
             )
           })}
@@ -241,6 +267,7 @@ function PlanEditor() {
           <Search size={12} /> 从动作库添加{rows.length ? `（已选 ${rows.length} 个）` : ''}
         </div>
         <ExerciseBrowser
+          collapsible
           className="flex flex-col"
           listClassName="max-h-[min(420px,55dvh)]"
           onPick={(ex) => {
