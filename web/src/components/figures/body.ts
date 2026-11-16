@@ -49,20 +49,20 @@ export interface BodyPaths {
 
 export function bodyPaths(r: Rig, sd: Sides): BodyPaths {
   const f = r.far
-  const legs = (o: J) => {
+  const legs = (o: J, own?: Rig['farLeg']) => {
     const hip = shift(r.hip, o)
-    const knee = shift(r.knee, o)
-    const ankle = shift(r.ankle, o)
+    const knee = shift(own?.knee ?? r.knee, o)
+    const ankle = shift(own?.ankle ?? r.ankle, o)
     return {
       thigh: limb(hip, knee, SPEC.thigh, sd.thighBack),
       shin: limb(knee, ankle, SPEC.shin, sd.shinBack),
       foot: smoothClosed(footPoints(ankle, r.ground + (o[1] < 0 ? o[1] * 0.5 : 0), r.toe), 0.9),
     }
   }
-  const arms = (o: J) => {
+  const arms = (o: J, own?: Rig['farArm']) => {
     const sh = shift(r.shoulder, o)
-    const el = shift(r.elbow, o)
-    const wr = shift(r.wrist, o)
+    const el = shift(own?.elbow ?? r.elbow, o)
+    const wr = shift(own?.wrist ?? r.wrist, o)
     return {
       upper: limb(sh, el, SPEC.upper, -sd.upperFront),
       fore: capsule(el, wr, SPEC.fore.ra, SPEC.fore.rb),
@@ -70,7 +70,7 @@ export function bodyPaths(r: Rig, sd: Sides): BodyPaths {
     }
   }
   const near = { ...legs([0, 0]), ...arms([0, 0]) }
-  const far = { ...legs(f), ...arms(f) }
+  const far = { ...legs(f, r.farLeg), ...arms(f, r.farArm) }
   const neckA = torsoAt(r, 0.98, 0.6)
   const chin = chinDir(r)
   const headC = r.head

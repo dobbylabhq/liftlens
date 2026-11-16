@@ -1,7 +1,8 @@
 import { useCallback, useDeferredValue, useEffect, useId, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion, useDragControls, type PanInfo } from 'motion/react'
-import { Loader2, Search, SearchX, Video, X } from 'lucide-react'
+import { ChevronUp, Loader2, Play, Plus, Search, SearchX, Video, X } from 'lucide-react'
+import { ExercisePreview } from './ExercisePreview'
 import type { ExerciseInfo } from '../lib/movement/types'
 import { BIG3_IDS, BODY_PART_ZH, COMMON_IDS, EQUIPMENT_ZH, equipmentZh, loadExercises, muscleZh, searchExercises } from '../lib/exercises'
 
@@ -121,6 +122,9 @@ export function ExerciseBrowser({
   const [analyzableOnly, setAnalyzableOnly] = useState(false)
   const [limit, setLimit] = useState(PAGE)
   const [active, setActive] = useState(0)
+  /** row whose movement preview is expanded */
+  const [open, setOpen] = useState<string | null>(null)
+  const toggle = (id: string) => setOpen((o) => (o === id ? null : id))
   const inputRef = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
   const sentinelRef = useRef<HTMLDivElement>(null)
@@ -288,7 +292,7 @@ export function ExerciseBrowser({
               <>
                 <SectionTitle>常用</SectionTitle>
                 {common.map((e, i) => (
-                  <Row key={`c-${e.id}`} e={e} idx={i} id={optionId(i)} active={active === i} onHover={setActive} onPick={onPick} />
+                  <Row key={`c-${e.id}`} e={e} idx={i} id={optionId(i)} active={active === i} onHover={setActive} onPick={onPick} open={open === `c-${e.id}`} onToggle={() => toggle(`c-${e.id}`)} />
                 ))}
                 <SectionTitle>全部动作 · {results.length}</SectionTitle>
               </>
@@ -296,7 +300,7 @@ export function ExerciseBrowser({
             {filtering && results.length > 0 && <SectionTitle>{results.length} 个结果</SectionTitle>}
             {results.slice(0, limit).map((e, j) => {
               const i = commonCount + j
-              return <Row key={e.id} e={e} idx={i} id={optionId(i)} active={active === i} onHover={setActive} onPick={onPick} />
+              return <Row key={e.id} e={e} idx={i} id={optionId(i)} active={active === i} onHover={setActive} onPick={onPick} open={open === e.id} onToggle={() => toggle(e.id)} />
             })}
             {filtering && results.length === 0 && (
               <div className="flex flex-col items-center gap-2 px-6 py-14 text-center">
@@ -341,31 +345,76 @@ function Chip({ on, onClick, accent, children }: { on: boolean; onClick: () => v
   )
 }
 
-function Row({ e, idx, id, active, onHover, onPick }: { e: ExerciseInfo; idx: number; id: string; active: boolean; onHover: (i: number) => void; onPick: (e: ExerciseInfo) => void }) {
+function Row({
+  e,
+  idx,
+  id,
+  active,
+  onHover,
+  onPick,
+  open,
+  onToggle,
+}: {
+  e: ExerciseInfo
+  idx: number
+  id: string
+  active: boolean
+  onHover: (i: number) => void
+  onPick: (e: ExerciseInfo) => void
+  open: boolean
+  onToggle: () => void
+}) {
   return (
-    <div
-      id={id}
-      data-idx={idx}
-      role="option"
-      aria-selected={active}
-      onClick={() => onPick(e)}
-      onMouseMove={() => !active && onHover(idx)}
-      className={`flex min-h-14 cursor-pointer items-center gap-3 border-b border-line/50 px-4 py-2.5 transition-colors ${active ? 'bg-panel-2' : 'hover:bg-panel-2/60'}`}
-    >
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-1.5">
-          <span className="truncate font-semibold">{e.zh || e.name}</span>
-          {e.big3 && <span className="shrink-0 rounded bg-cyan/10 px-1.5 py-px text-[10px] font-semibold text-cyan">三大项</span>}
+    <div className={`border-b border-line/50 ${open ? 'bg-panel-2/60' : ''}`}>
+      <div
+        id={id}
+        data-idx={idx}
+        role="option"
+        aria-selected={active}
+        onClick={() => onPick(e)}
+        onMouseMove={() => !active && onHover(idx)}
+        className={`flex min-h-14 cursor-pointer items-center gap-3 px-4 py-2.5 transition-colors ${active ? 'bg-panel-2' : 'hover:bg-panel-2/60'}`}
+      >
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-1.5">
+            <span className="truncate font-semibold">{e.zh || e.name}</span>
+            {e.big3 && <span className="shrink-0 rounded bg-cyan/10 px-1.5 py-px text-[10px] font-semibold text-cyan">三大项</span>}
+          </div>
+          <div className="truncate font-mono text-[11px] text-dim">{e.name}</div>
+          <div className="truncate text-xs text-mute">
+            {equipmentZh(e.equipment)} · {muscleZh(e.target)}
+          </div>
         </div>
-        <div className="truncate font-mono text-[11px] text-dim">{e.name}</div>
-        <div className="truncate text-xs text-mute">
-          {equipmentZh(e.equipment)} · {muscleZh(e.target)}
-        </div>
+        {e.pattern !== null && (
+          <span className="hidden shrink-0 items-center gap-1 rounded-full border border-acid/40 bg-acid/10 px-2 py-0.5 text-[11px] font-semibold text-acid sm:flex">
+            <Video size={11} /> 可视频分析
+          </span>
+        )}
+        <button
+          type="button"
+          aria-expanded={open}
+          aria-label={open ? '收起动作预览' : `看「${e.zh || e.name}」的动作`}
+          onClick={(ev) => {
+            ev.stopPropagation()
+            onToggle()
+          }}
+          className={`flex h-9 shrink-0 items-center gap-1 rounded-full border px-3 text-xs transition-colors ${open ? 'border-acid/60 text-acid' : 'border-line-2 text-mute hover:text-fg'}`}
+        >
+          {open ? <ChevronUp size={13} /> : <Play size={12} />} {open ? '收起' : '动作'}
+        </button>
       </div>
-      {e.pattern !== null && (
-        <span className="flex shrink-0 items-center gap-1 rounded-full border border-acid/40 bg-acid/10 px-2 py-0.5 text-[11px] font-semibold text-acid">
-          <Video size={11} /> 可视频分析
-        </span>
+      {open && (
+        <div className="px-4 pb-4 pt-1">
+          {e.pattern !== null && (
+            <div className="mb-2 flex items-center gap-1 text-[11px] font-semibold text-acid sm:hidden">
+              <Video size={11} /> 可视频分析
+            </div>
+          )}
+          <ExercisePreview exercise={e} compact />
+          <button type="button" className="btn-acid mt-3 h-10 w-full sm:w-auto" onClick={() => onPick(e)}>
+            <Plus size={15} /> 选这个动作
+          </button>
+        </div>
       )}
     </div>
   )

@@ -77,6 +77,9 @@ export interface Rig extends Pose {
   /** lateral distance (svg px) of elbow / wrist from the midline — for the 3D model */
   elbowZ: number
   wristZ: number
+  /** far-side limbs in their own position (lunge stance, one-arm work); default = near limbs shifted by `far` */
+  farLeg?: { knee: J; ankle: J }
+  farArm?: { elbow: J; wrist: J }
 }
 
 /**

@@ -2,8 +2,9 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { AnimatePresence, motion } from 'motion/react'
-import { Camera, Check, ChevronRight, ClipboardPaste, Flag, HardDrive, ImagePlus, Loader2, Minus, PencilLine, Plus, Radio, Search, Timer, Trash2 } from 'lucide-react'
+import { Camera, Check, ChevronRight, ChevronUp, ClipboardPaste, Flag, HardDrive, ImagePlus, Loader2, Minus, PencilLine, Play, Plus, Radio, Search, Timer, Trash2 } from 'lucide-react'
 import { ExerciseBrowser, ExercisePicker } from '../components/ExercisePicker'
+import { ExercisePreviewById } from '../components/ExercisePreview'
 import { LiveSet, type LiveResult } from '../components/LiveSet'
 import { ALIAS_IDS, BIG3_IDS, getExercise, loadExercises, searchExercises } from '../lib/exercises'
 import { BIG3_PATTERN, refOf, type ExerciseRef } from '../lib/exerciseRef'
@@ -118,6 +119,8 @@ function PlanEditor() {
   }, [params, setParams])
   const [text, setText] = useState('')
   const [picker, setPicker] = useState<number | null>(null)
+  /** plan row whose movement preview is open */
+  const [peek, setPeek] = useState<number | null>(null)
   const last = useLiveQuery(() => db.workouts.orderBy('createdAt').last(), [])
   const upd = (i: number, patch: Partial<Row>) => setRows((rs) => rs.map((r, j) => (j === i ? { ...r, ...patch } : r)))
 
@@ -180,6 +183,7 @@ function PlanEditor() {
         <AnimatePresence initial={false}>
           {rows.map((r, i) => {
             const hold = !!r.exercise?.hold
+            const exId = r.exercise?.id ?? (r.lift !== 'other' ? BIG3_IDS[r.lift] : undefined)
             const analyzable = r.lift !== 'other' || !!r.exercise?.pattern
             return (
               <motion.div key={i} layout initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, height: 0 }} className="card p-4">
@@ -199,10 +203,24 @@ function PlanEditor() {
                       {r.exercise?.unilateral && <span className="chip h-6">单侧</span>}
                     </div>
                   </button>
-                  <button aria-label="删除这个动作" className="flex h-10 w-10 shrink-0 items-center justify-center text-dim hover:text-bad" onClick={() => setRows((rs) => rs.filter((_, j) => j !== i))}>
+                  {exId && (
+                    <button
+                      aria-expanded={peek === i}
+                      className={`flex h-10 shrink-0 items-center gap-1 rounded-full border px-3 text-xs ${peek === i ? 'border-acid/60 text-acid' : 'border-line-2 text-mute hover:text-fg'}`}
+                      onClick={() => setPeek(peek === i ? null : i)}
+                    >
+                      {peek === i ? <ChevronUp size={13} /> : <Play size={12} />} 看动作
+                    </button>
+                  )}
+                  <button aria-label="删除这个动作" className="flex h-10 w-10 shrink-0 items-center justify-center text-dim hover:text-bad" onClick={() => (setRows((rs) => rs.filter((_, j) => j !== i)), setPeek(null))}>
                     <Trash2 size={15} />
                   </button>
                 </div>
+                {peek === i && exId && (
+                  <div className="mt-3">
+                    <ExercisePreviewById id={exId} />
+                  </div>
+                )}
                 <div className="mt-3 grid grid-cols-3 gap-2">
                   <NumField label="组数" value={r.sets} onChange={(v) => upd(i, { sets: Math.max(1, Math.min(20, v)) })} />
                   <NumField label={hold ? '每组秒数' : r.exercise?.unilateral ? '每侧次数' : '每组次数'} value={r.reps} step={hold ? 5 : 1} onChange={(v) => upd(i, { reps: Math.max(1, Math.min(hold ? 600 : 50, v)) })} />

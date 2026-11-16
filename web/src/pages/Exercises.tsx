@@ -6,6 +6,9 @@ import { BODY_PART_ZH, PATTERN_ZH, bodyPartZh, equipmentZh, loadExercises, muscl
 import { exerciseMuscleWeights } from '../lib/muscles'
 import { PATTERNS } from '../lib/movement/patterns'
 import { MuscleMap } from '../components/MuscleMap'
+import { VolumeFigure } from '../components/figures'
+import { ExerciseFigure } from '../components/figures/exercise/ExerciseFigure'
+import { exerciseSpec } from '../components/figures/exercise/spec'
 import type { ExerciseInfo } from '../lib/movement/types'
 
 const PAGE = 60
@@ -121,6 +124,11 @@ function Detail({ ex, onClose }: { ex: ExerciseInfo; onClose: () => void }) {
           </button>
         </div>
 
+        {(ex.big3 || exerciseSpec(ex)) && (
+          <div className="mt-4 overflow-hidden rounded-2xl border border-line bg-ink-2">
+            {ex.big3 ? <VolumeFigure lift={ex.big3} muscles className="aspect-[10/7] max-h-72 w-full" showTrail={false} /> : <ExerciseFigure exercise={ex} className="aspect-[10/7] max-h-72 w-full" />}
+          </div>
+        )}
         <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
           <div>
             <MuscleMap weights={exerciseMuscleWeights(ex.target, ex.secondaryMuscles)} view="both" />

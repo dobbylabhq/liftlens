@@ -72,6 +72,7 @@ const AgentPage = P.agent.Page
 const FigureLab = lazy(() => import('./pages/FigureLab'))
 const MuscleLab = lazy(() => import('./pages/MuscleLab'))
 const LiveLab = lazy(() => import('./pages/LiveLab'))
+const ExerciseLab = lazy(() => import('./pages/ExerciseLab'))
 const Privacy = lazy(() => import('./pages/Privacy'))
 
 const NAV = [
@@ -309,6 +310,7 @@ export const router = createBrowserRouter([
       { path: '/lab/figures', element: <FigureLab /> },
       { path: '/lab/muscles', element: <MuscleLab /> },
       { path: '/lab/live', element: <LiveLab /> },
+      { path: '/lab/exercises', element: <ExerciseLab /> },
     ],
   },
 ])
