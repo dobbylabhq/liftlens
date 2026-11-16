@@ -433,7 +433,8 @@ function ActiveWorkout({ w, onFinish }: { w: Workout; onFinish: (id: number) => 
           })()}
           logOnly={logOnly}
           onSave={(patch) => saveSet(cur, patch)}
-          onNext={() => setSel(nextSet(w))}
+          // clear the selection: the panel then follows the first unfinished set of the *updated* plan
+          onNext={() => setSel(null)}
         />
       )}
       {!next && (
@@ -518,7 +519,14 @@ function SetPanel({
 }) {
   const item = w.items[at.item]
   const planned = item.sets[at.set]
-  const [kg, setKg] = useState<number | null>(planned.weightKg)
+  // default to the weight actually used on the last finished set of this exercise, so a change carries over
+  const lastKg = item.sets.slice(0, at.set).reverse().find((st) => isSetDone(st) && st.weightKg != null)?.weightKg
+  const [kgText, setKgText] = useState(() => {
+    const v = lastKg ?? planned.weightKg
+    return v != null ? String(v) : ''
+  })
+  const kg = kgText && Number(kgText) > 0 ? Number(kgText) : null
+  const stepKg = (d: number) => setKgText(String(Math.max(0, Math.round(((kg ?? (d > 0 ? 17.5 : 22.5)) + d) * 100) / 100)))
   // "只记录" mode starts every set on manual entry; a single set can still be filmed
   const [manual, setManual] = useState(logOnly)
   const [manualReps, setManualReps] = useState(planned.reps)
@@ -629,7 +637,10 @@ function SetPanel({
         </div>
       ) : planned.done ? (
         <div className="mt-3">
-          <div className="text-lg font-semibold">已记录：{planned.repsDone ?? planned.reps} {unit}</div>
+          <div className="text-lg font-semibold">
+            已记录：{planned.repsDone ?? planned.reps} {unit}
+            {planned.weightKg ? <span className="text-acid"> @ {planned.weightKg}kg</span> : null}
+          </div>
           <div className="mt-3 flex flex-wrap gap-2">
             <button className="btn-acid" onClick={onNext}>
               下一组 <ChevronRight size={16} />
@@ -649,14 +660,26 @@ function SetPanel({
                 {item.exercise?.unilateral && !hold ? <span className="text-base text-mute"> / 每侧</span> : null} {kg ? <span className="text-acid">@ {kg}kg</span> : null}
               </div>
             </div>
-            <div className="flex items-center gap-1">
-              <button aria-label="减 2.5kg" className="btn-ghost h-10 w-10 p-0" onClick={() => setKg((k) => Math.max(0, (k ?? 20) - 2.5))}>
-                <Minus size={14} />
-              </button>
-              <button aria-label="加 2.5kg" className="btn-ghost h-10 w-10 p-0" onClick={() => setKg((k) => (k ?? 17.5) + 2.5)}>
-                <Plus size={14} />
-              </button>
-            </div>
+          </div>
+          <div className="mt-3 flex items-center gap-2">
+            <span className="text-sm text-mute">这组重量</span>
+            <button aria-label="减 2.5kg" className="btn-ghost h-10 w-10 shrink-0 p-0" onClick={() => stepKg(-2.5)}>
+              <Minus size={14} />
+            </button>
+            <label className="relative w-28">
+              <input
+                className="input pr-9 text-center font-mono"
+                inputMode="decimal"
+                placeholder={hold ? '自重' : '不填'}
+                aria-label="这组重量 kg"
+                value={kgText}
+                onChange={(e) => setKgText(e.target.value.replace(/[^\d.]/g, ''))}
+              />
+              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-dim">kg</span>
+            </label>
+            <button aria-label="加 2.5kg" className="btn-ghost h-10 w-10 shrink-0 p-0" onClick={() => stepKg(2.5)}>
+              <Plus size={14} />
+            </button>
           </div>
 
           {canAnalyze && !manual ? (
