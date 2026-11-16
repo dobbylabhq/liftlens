@@ -37,6 +37,9 @@
     <script type="application/ld+json">
       {"@context":"https://schema.org","@type":"WebApplication","name":"LiftLens","url":"%SITE%/","applicationCategory":"HealthApplication","operatingSystem":"Web","inLanguage":"zh-CN","description":"在浏览器里分析力量训练视频：姿态识别、杠铃轨迹、计次，并由你自己的 AI 教练点评。","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}
     </script>
+    <!-- JS is running: hide the crawler fallback in #root right away instead of flashing it until React mounts -->
+    <script>document.documentElement.classList.add('js')</script>
+    <style>.js .seo-fallback{display:none}</style>
     <script>
       // Entry/preload script failed to load (got HTML mid-deploy, or a bad cached copy): refetch bypassing cache, then reload — at most once
       addEventListener(
@@ -60,8 +63,8 @@
   </head>
   <body>
     <div id="root">
-      <!-- visible to crawlers and no-JS clients; React replaces it on load -->
-      <main style="max-width:640px;margin:0 auto;padding:48px 16px;color:#eef2ef;font-family:system-ui,sans-serif">
+      <!-- read by crawlers and shown to no-JS clients; hidden while JS runs (see .js above); React replaces it on load -->
+      <main class="seo-fallback" style="max-width:640px;margin:0 auto;padding:48px 16px;color:#eef2ef;font-family:system-ui,sans-serif">
         <h1>LiftLens · 拍一组，自动测量，AI 教练点评</h1>
         <p>拍下卧推、深蹲、硬拉等训练视频，在浏览器里完成姿态识别、杠铃轨迹和计次；训练模式支持实时计次和逐组分析；教练点评由你选的 AI 完成（云端 API 或电脑上的 Claude Code / Codex），手机也能用。视频和训练记录只保存在你的设备上。</p>
       </main>
