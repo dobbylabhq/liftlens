@@ -856,7 +856,7 @@ function Summary({ id, onNew }: { id: number; onNew: () => void }) {
           ),
         )}
       </div>
-      <p className="mt-4 text-sm text-mute">每组都已存进训练日志。回到电脑上打开任意一组，可以请教练点评。</p>
+      <p className="mt-4 text-sm text-mute">每组都已存进训练日志（这个浏览器里）。拍过的组可以打开看完整分析、请教练点评；手动记录的组显示次数和重量。</p>
       <div className="mt-6 flex flex-wrap gap-2">
         <Link to="/journal" className="btn-acid">
           去训练日志

@@ -2,18 +2,40 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { motion } from 'motion/react'
-import { Plus, ChevronRight } from 'lucide-react'
+import { Plus, ChevronRight, PencilLine } from 'lucide-react'
 import { db, todayISO } from '../lib/db'
 import { LIFTS, e1rm } from '../lib/lifts'
 import { Empty } from '../components/bits'
 import { BackupPanel } from '../components/BackupPanel'
 import type { LiftId, Session } from '../lib/types'
 import { LIFT_COLOR, sessionName } from '../lib/exerciseRef'
+import { isHoldItem, type PlanLift, type Workout } from '../lib/workout'
+
+/** Sets logged by hand in a workout (no video) for one exercise — they have no session of their own */
+interface ManualLog {
+  key: string
+  date: string
+  name: string
+  lift: PlanLift
+  hold: boolean
+  sets: { reps: number; weightKg: number | null }[]
+}
+
+function manualLogs(workouts: Workout[]): ManualLog[] {
+  const out: ManualLog[] = []
+  for (const w of workouts)
+    w.items.forEach((it, i) => {
+      const sets = it.sets.filter((st) => st.done && st.sessionId == null).map((st) => ({ reps: st.repsDone ?? st.reps, weightKg: st.weightKg }))
+      if (sets.length) out.push({ key: `${w.id}-${i}`, date: w.date, name: it.name, lift: it.lift, hold: isHoldItem(it), sets })
+    })
+  return out
+}
 
 const WEEKS = 20
 
 export default function Journal() {
   const sessions = useLiveQuery(() => db.sessions.orderBy('createdAt').reverse().toArray(), [])
+  const workouts = useLiveQuery(() => db.workouts.toArray(), [])
   const [filter, setFilter] = useState<LiftId | 'other' | 'all'>('all')
   const [selected, setSelected] = useState<string | null>(null)
   // Render only the last 14 days at first so long-time users don't see lag opening the journal
@@ -27,6 +49,16 @@ export default function Journal() {
     }
     return m
   }, [sessions, filter])
+  const logsByDate = useMemo(() => {
+    const m = new Map<string, ManualLog[]>()
+    for (const l of manualLogs(workouts ?? [])) {
+      if (filter !== 'all' && l.lift !== filter) continue
+      m.set(l.date, [...(m.get(l.date) ?? []), l])
+    }
+    return m
+  }, [workouts, filter])
+  /** every day with something logged, newest first */
+  const allDays = useMemo(() => [...new Set([...byDate.keys(), ...logsByDate.keys()])].sort().reverse(), [byDate, logsByDate])
 
   // calendar cells: WEEKS columns × 7 rows ending this week
   const cells = useMemo(() => {
@@ -42,14 +74,14 @@ export default function Journal() {
     return out
   }, [])
 
-  if (sessions === undefined) return null
-  const days = [...byDate.keys()].filter((d) => !selected || d === selected)
+  if (sessions === undefined || workouts === undefined) return null
+  const days = allDays.filter((d) => !selected || d === selected)
   const streak = (() => {
     let n = 0
     const d = new Date()
     for (;;) {
       const iso = todayISO(d)
-      if (byDate.has(iso)) n++
+      if (byDate.has(iso) || logsByDate.has(iso)) n++
       else if (iso !== todayISO()) break
       d.setDate(d.getDate() - 1)
       if (n > 365) break
@@ -74,23 +106,26 @@ export default function Journal() {
           <div className="kicker mb-3 flex flex-wrap justify-between gap-x-3">
             <span>最近 {WEEKS} 周</span>
             <span>
-              {byDate.size} 个训练日 · 连续 <span className="text-acid">{streak}</span> 天
+              {allDays.length} 个训练日 · 连续 <span className="text-acid">{streak}</span> 天
             </span>
           </div>
           <div ref={(el) => { if (el && !el.dataset.scrolled) { el.dataset.scrolled = '1'; el.scrollLeft = el.scrollWidth } }} className="-mx-1 overflow-x-auto p-1 [scrollbar-width:none]">
           <div className="grid w-max grid-flow-col grid-rows-7 gap-1.5 sm:gap-1">
             {cells.map((c, i) => {
               const list = byDate.get(c.date) ?? []
+              const logs = logsByDate.get(c.date) ?? []
+              const logged = logs.reduce((n, l) => n + l.sets.length, 0)
               const best = list.reduce((m, s) => Math.max(m, s.agent?.score ?? s.score), 0)
-              const lift = list[0]?.lift
+              const lift = list[0]?.lift ?? logs[0]?.lift
+              const any = list.length + logged > 0
               return (
                 <button
                   key={c.date}
-                  disabled={!list.length}
+                  disabled={!any}
                   onClick={() => setSelected(selected === c.date ? null : c.date)}
-                  title={`${c.date}${list.length ? ` · ${list.length} 组 · 最高 ${best} 分` : ''}`}
+                  title={`${c.date}${any ? ` · ${list.length + logged} 组${list.length ? ` · 最高 ${best} 分` : ''}` : ''}`}
                   className={`anim-pop h-5 w-5 rounded-[4px] transition-transform hover:scale-125 sm:h-3.5 sm:w-3.5 sm:rounded-[3px] ${c.future ? 'opacity-15' : ''} ${selected === c.date ? 'ring-2 ring-fg' : ''}`}
-                  style={{ ['--d' as string]: `${i * 2}ms`, background: list.length ? LIFT_COLOR[lift!] : '#1a201d', opacity: list.length ? 0.35 + (best / 100) * 0.65 : undefined }}
+                  style={{ ['--d' as string]: `${i * 2}ms`, background: any ? LIFT_COLOR[lift!] : '#1a201d', opacity: list.length ? 0.35 + (best / 100) * 0.65 : any ? 0.6 : undefined }}
                 />
               )
             })}
@@ -102,7 +137,7 @@ export default function Journal() {
                 <span className="h-2.5 w-2.5 rounded-sm" style={{ background: LIFT_COLOR[l] }} /> {l === 'other' ? '其他动作' : LIFTS[l].name}
               </span>
             ))}
-            <span>· 颜色越亮分数越高</span>
+            <span>· 颜色越亮分数越高（手动记录的组按中等亮度显示）</span>
           </div>
         </div>
         <div className="card flex flex-row gap-1 p-2 md:flex-col">
@@ -116,9 +151,9 @@ export default function Journal() {
       </div>
 
       <div className="mt-8 space-y-8">
-        {sessions.length === 0 && (
+        {allDays.length === 0 && (
           <Empty title="还没有训练记录">
-            上传第一段训练视频，分析结果会按天保存在浏览器本地（IndexedDB），之后可以在「能力」里看趋势。
+            去「训练」记录一组，或上传一段训练视频。记录会按天保存在这个浏览器里（IndexedDB），之后可以在「能力」里看趋势。
           </Empty>
         )}
         <>
@@ -129,7 +164,7 @@ export default function Journal() {
                 <span className="text-xs text-dim">{new Date(d).toLocaleDateString('zh-CN', { weekday: 'long' })}</span>
               </div>
               <div className="grid gap-3 md:grid-cols-2">
-                {byDate.get(d)!.map((s, i) => (
+                {(byDate.get(d) ?? []).map((s, i) => (
                   <div key={s.id} className="anim-rise" style={{ ['--d' as string]: `${Math.min(di, 8) * 50 + i * 50}ms` }}>
                     <Link to={`/session/${s.id}`} className="card group flex items-center gap-4 p-4 transition-colors hover:border-line-2">
                       <span className="h-10 w-1 rounded-full" style={{ background: LIFT_COLOR[s.lift] }} />
@@ -150,6 +185,9 @@ export default function Journal() {
                     </Link>
                   </div>
                 ))}
+                {(logsByDate.get(d) ?? []).map((l) => (
+                  <ManualLogCard key={l.key} log={l} />
+                ))}
               </div>
             </section>
           ))}
@@ -161,6 +199,34 @@ export default function Journal() {
         </>
       </div>
       <BackupPanel />
+    </div>
+  )
+}
+
+/** Hand-logged sets of one exercise: shown in the day like analysed sets, without a detail page */
+function ManualLogCard({ log }: { log: ManualLog }) {
+  const unit = log.hold ? '秒' : '次'
+  const best = log.hold ? null : Math.max(0, ...log.sets.map((st) => e1rm(st.weightKg, st.reps) ?? 0)) || null
+  const sameKg = log.sets.every((st) => st.weightKg === log.sets[0].weightKg)
+  const detail = sameKg
+    ? `${log.sets[0].weightKg ? `${log.sets[0].weightKg}kg × ` : ''}${log.sets.map((st) => st.reps).join(' / ')} ${unit}`
+    : log.sets.map((st) => `${st.weightKg ? `${st.weightKg}kg×` : ''}${st.reps}`).join(' · ') + ` ${unit}`
+  return (
+    <div className="card flex items-center gap-4 p-4">
+      <span className="h-10 w-1 rounded-full" style={{ background: LIFT_COLOR[log.lift] }} />
+      <div className="min-w-0 flex-1">
+        <div className="font-semibold">
+          {log.name}
+          <span className="ml-2 font-mono text-sm text-mute">{log.sets.length} 组</span>
+        </div>
+        <div className="truncate font-mono text-xs text-dim">{detail}</div>
+      </div>
+      <div className="text-right">
+        <div className="flex items-center justify-end gap-1 text-xs text-dim">
+          <PencilLine size={12} /> 手动记录
+        </div>
+        {best ? <div className="font-mono text-[10px] text-dim">e1RM {best}</div> : null}
+      </div>
     </div>
   )
 }
