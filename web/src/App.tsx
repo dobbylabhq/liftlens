@@ -4,6 +4,7 @@ import { isChunkLoadError, reloadForNewVersion } from './lib/reload'
 import { motion, MotionConfig } from 'motion/react'
 import { Toaster } from 'sonner'
 import { AGENT_CMD, consumePairFragment, isAgentStale, useAgent } from './lib/agent'
+import { InstallHint } from './components/InstallHint'
 import { toast } from 'sonner'
 import { BookOpen, CalendarDays, ChevronRight, Library, Timer, TrendingUp, Upload } from 'lucide-react'
 import { useLiveQuery } from 'dexie-react-hooks'
@@ -246,6 +247,8 @@ function Shell() {
           </div>
         </header>
         <StaleAgentBanner />
+        {/* not over the controls of a set being filmed or logged */}
+        {!/^\/(train|new|session|lab)/.test(loc.pathname) && <InstallHint />}
         {/* New page slides up and fades in; don't wait for the old one to exit (AnimatePresence mode=wait adds 0.3s per switch and can flash blank with lazy pages) */}
         <motion.main
           className="pb-[calc(4rem+env(safe-area-inset-bottom))] sm:pb-0"

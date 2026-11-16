@@ -46,6 +46,9 @@ export default function Privacy() {
           </Link>
           里导出备份（JSON 文件，不含视频和 API key），在新设备上导入即可。
         </p>
+        <p>
+          在 iPhone / iPad 上，<b>添加到主屏幕的 LiftLens 和 Safari 里打开的 LiftLens 也是两份独立的数据</b>，互相看不到。换着用之前，同样用导出 / 导入备份把记录带过去。
+        </p>
       </Section>
 
       <Section title="什么时候数据会离开你的设备">
