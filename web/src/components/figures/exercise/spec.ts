@@ -207,7 +207,9 @@ function postureOf(base: Base, n: string, equip: Equip): { posture: Posture; ben
         ? { posture: 'stand', bench: 0, variant: 'pushdown' }
         : { posture: 'supine', bench: 0, variant: 'lying' }
     case 'raise':
-      if (has(n, /\brear\b|reverse fly|bent/)) return { posture: 'bent', bench: 0, variant: 'rear' }
+      if (has(n, /\brear\b|reverse fly|bent/)) return { posture: 'bent', bench: incline ? 45 : 0, variant: 'rear' }
+      // raises lying back on an incline bench
+      if (incline) return { posture: 'supine', bench: 45, variant: has(n, /lateral|\bside\b/) ? 'lateral' : 'front' }
       if (has(n, /\bfront\b/)) return { posture: seated ? 'seated' : 'stand', bench: 0, variant: 'front' }
       if (has(n, /shrug/)) return { posture: 'stand', bench: 0, variant: 'shrug' }
       if (has(n, /upright row/)) return { posture: 'stand', bench: 0, variant: 'upright' }

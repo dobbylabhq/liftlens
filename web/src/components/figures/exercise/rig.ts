@@ -166,7 +166,12 @@ function frameFn(s: ExerciseSpec): ((t: number) => Frame) | null {
         const st = stand(12)
         return (t) => ({ ...st, ...arms(st, mix(128, 112, t), mix(118, 104, t), mix(0.95, 0.35, t), mix(0.95, 0.35, t)) })
       }
-      return (t) => ({ ...b, ...arms(b, mix(88, 240, t), mix(80, 330, t), mix(0.92, 0.35, t), mix(0.92, 0.3, t)) })
+      // the arm stays almost straight and swings out as one piece; seen from the side it drops and shortens
+      return (t) => {
+        const a = mix(92, 205, t)
+        const k = mix(0.98, 0.55, t)
+        return { ...b, ...arms(b, a, a - 14, k, k) }
+      }
     case 'pullover':
       return (t) => ({ ...b, ...arms(b, mix(85, -12, t), mix(80, -18, t)) })
     case 'ohp':
@@ -216,6 +221,11 @@ function frameFn(s: ExerciseSpec): ((t: number) => Frame) | null {
       if (s.variant === 'kickback') return (t) => ({ ...b, ...arms(b, 200, mix(112, 200, t)) })
       return (t) => ({ ...b, ...arms(b, 72, mix(72, -38, t)) })
     case 'raise':
+      if (s.variant === 'rear' && s.bench) {
+        const cb = { ...bent(), torso: 50, thigh: 168, shin: 184 }
+        return (t) => ({ ...cb, ...arms(cb, mix(92, 128, t), mix(92, 128, t), mix(1, 0.35, t), mix(1, 0.35, t)) })
+      }
+      if (s.posture === 'supine') return (t) => ({ ...b, upper: mix(182, 260, t), fore: mix(180, 256, t) })
       if (s.variant === 'front') return (t) => ({ ...b, ...arms(b, mix(178, 88, t), mix(172, 84, t)) })
       if (s.variant === 'rear') return (t) => ({ ...b, ...arms(b, mix(92, 128, t), mix(92, 128, t), mix(1, 0.35, t), mix(1, 0.35, t)) })
       if (s.variant === 'shrug') return (t) => ({ ...b, ...arms(b, 180, 180, mix(1, 0.9, t)) })
@@ -376,6 +386,9 @@ function propsOf(s: ExerciseSpec, r0: Rig, r1: Rig): Prop[] {
       return s.posture === 'hang' ? [{ kind: 'bar', at: r0.bar, post: false }] : []
     case 'dip':
       return s.variant === 'bench' ? [pad(add(r0.bar, [-22, 1.6]), add(r0.bar, [4, 1.6]))] : [{ kind: 'bar', at: r0.bar, post: true }]
+    case 'raise':
+      if (s.variant === 'rear' && s.bench) return [under(r0, -6, -2)]
+      break
     case 'row':
       if (s.variant === 'inverted') return [{ kind: 'bar', at: r0.bar, post: true }]
       if (s.variant === 'chest') return [under(r0, -6, -2)]
