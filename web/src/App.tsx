@@ -216,7 +216,8 @@ function Shell() {
   return (
     <MotionConfig reducedMotion="user">
       <div className="noise min-h-dvh">
-        <header className="sticky top-0 z-40 border-b border-line/70 bg-ink">
+        {/* safe-area padding + a solid strip above: content scrolling under the status bar must not show through */}
+        <header className="sticky top-0 z-40 border-b border-line/70 bg-ink pt-[env(safe-area-inset-top)] before:pointer-events-none before:absolute before:inset-x-0 before:bottom-full before:h-40 before:bg-ink">
           <div className="mx-auto flex h-14 max-w-6xl items-center gap-2 px-4">
             <NavLink to="/" className="mr-2 flex items-center gap-2 font-display text-lg font-extrabold tracking-tight">
               <svg viewBox="0 0 32 32" className="h-6 w-6">
