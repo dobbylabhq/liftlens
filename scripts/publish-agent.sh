@@ -3,6 +3,7 @@
 #
 #   scripts/publish-agent.sh            # publish if agent/src changed since the last release
 #   scripts/publish-agent.sh --dry-run  # show what would be published, publish nothing
+#   scripts/publish-agent.sh --otp=123456   # with npm 2FA: the 6-digit code from your authenticator
 #
 # The site URL (LIFTLENS_SITE, from .env) is baked into the package as its default web app, and
 # the coach skills are bundled as an offline fallback. When the source fingerprint differs from the
@@ -13,7 +14,14 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 DRY=""
-[ "${1:-}" = "--dry-run" ] && DRY="--dry-run"
+OTP=""
+for a in "$@"; do
+  case "$a" in
+    --dry-run) DRY="--dry-run" ;;
+    --otp=*) OTP="$a" ;;
+    *) echo "✗ unknown option: $a"; exit 1 ;;
+  esac
+done
 if [ -f "$ROOT/.env" ]; then set -a; . "$ROOT/.env"; set +a; fi
 SITE="${SITE:-${LIFTLENS_SITE:-}}"
 [ -n "$SITE" ] || { echo "✗ set LIFTLENS_SITE=https://<your-site> in .env (see .env.example)"; exit 1; }
@@ -66,7 +74,7 @@ npx -y $NAME help       # all commands
 Source and privacy details: https://github.com/dobbylabhq/liftlens
 EOF
 
-(cd "$TMP" && npm publish $DRY)
+(cd "$TMP" && npm publish $DRY $OTP)
 
 if [ -z "$DRY" ]; then
   # keep the repo's version in step with the release
