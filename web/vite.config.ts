@@ -4,6 +4,7 @@ import tailwindcss from '@tailwindcss/vite'
 import path from 'node:path'
 // @ts-expect-error plain .mjs helper shared with the agent
 import { agentBuildId } from '../agent/src/build-id.mjs'
+import AGENT_PKG from '../agent/package.json' with { type: 'json' }
 
 /**
  * SEO: absolute URLs (canonical, og:url, og:image) need the deployed origin, which comes from the
@@ -32,7 +33,11 @@ function site(): Plugin {
 
 export default defineConfig({
   plugins: [react(), tailwindcss(), site()],
-  define: { __AGENT_BUILD__: JSON.stringify(agentBuildId(path.resolve(import.meta.dirname, '../agent/src'))) },
+  define: {
+    __AGENT_BUILD__: JSON.stringify(agentBuildId(path.resolve(import.meta.dirname, '../agent/src'))),
+    // published as an npm package by scripts/publish-agent.sh; the exact version keeps npx off stale caches
+    __AGENT_PKG__: JSON.stringify(`${AGENT_PKG.name}@${AGENT_PKG.version}`),
+  },
   resolve: { alias: { '@coaches': path.resolve(import.meta.dirname, '../coaches') } },
   server: { port: 5180, strictPort: true, fs: { allow: ['..'] } },
 })

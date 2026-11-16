@@ -55,9 +55,9 @@ npm run dev     # 网页 http://localhost:5180 + 本地 agent 127.0.0.1:4517
 ### 本地 agent 命令
 
 ```bash
-npx -y <站点>/agent/liftlens-agent.tgz            # 启动并和浏览器配对
-npx -y <站点>/agent/liftlens-agent.tgz install    # 后台运行、开机自启（macOS / Linux）
-npx -y <站点>/agent/liftlens-agent.tgz use <id>   # 切换点评工具，例如 use qwen --key … --model …
+npx -y @dobbylab/liftlens-agent            # 启动并和浏览器配对
+npx -y @dobbylab/liftlens-agent install    # 后台运行、开机自启（macOS / Linux）
+npx -y @dobbylab/liftlens-agent use <id>   # 切换点评工具，例如 use qwen --key … --model …
 ```
 
 ## 部署
@@ -70,7 +70,9 @@ npx wrangler login
 scripts/deploy.sh
 ```
 
-部署脚本还会把教练 skills 和带版本号的 agent 安装包一起发布到站点上，用户不需要 npm 账号就能用 `npx` 运行。用你的站点的人会在自己电脑上运行这个包，等于信任你部署的代码；不想这样的人可以 clone 仓库，用 `npm run agent` 自己跑。
+本地 agent 是 npm 包 [`@dobbylab/liftlens-agent`](https://www.npmjs.com/package/@dobbylab/liftlens-agent)。改了 `agent/` 之后，先运行 `scripts/publish-agent.sh`（自动升版本号、写入 `LIFTLENS_SITE`、发布），提交 `agent/package.json`，再部署。如果网页要求的 agent 版本没有用当前代码发布过，`deploy.sh` 会拒绝部署。没有自己 npm 包的 fork 可以用 `SKIP_AGENT_CHECK=1` 部署。部署时还会把教练 skills 发布到站点上，运行中的 agent 会自动同步。
+
+不想运行发布的包，可以 clone 仓库，用 `npm run agent` 自己跑。
 
 ## 隐私
 

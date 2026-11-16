@@ -18,6 +18,8 @@ try {
   /* Node < 20.12: rely on the real environment */
 }
 export const VERSION = PKG.version
+/** what users type to run this agent, e.g. `npx @dobbylab/liftlens-agent` */
+export const RUN_CMD = `npx ${PKG.name}`
 export const BUILD = agentBuildId(__dirname)
 export const PORT = Number(process.env.LIFTLENS_PORT ?? 4517)
 export const AGENT_URL = `http://127.0.0.1:${PORT}`

@@ -202,7 +202,7 @@ function Shell() {
   const loc = useLocation()
   const load = useAgent((s) => s.load)
   useEffect(() => {
-    // pair first (if opened from `npx liftlens-agent`), then load settings — avoids a stale-token race
+    // pair first (if opened from the agent's pairing link), then load settings — avoids a stale-token race
     consumePairFragment()
       .then((paired) => {
         if (paired) toast.success('已连接本地 agent，可以请教练点评了')

@@ -81,10 +81,10 @@ No configuration is needed for local development.
 ### Local agent CLI
 
 ```bash
-npx -y <site>/agent/liftlens-agent.tgz            # start and pair with the browser
-npx -y <site>/agent/liftlens-agent.tgz install    # run in the background, start at login (macOS / Linux)
-npx -y <site>/agent/liftlens-agent.tgz use <id>   # switch runtime, e.g. `use qwen --key … --model …`
-npx -y <site>/agent/liftlens-agent.tgz runtimes   # list runtimes and their status
+npx -y @dobbylab/liftlens-agent            # start and pair with the browser
+npx -y @dobbylab/liftlens-agent install    # run in the background, start at login (macOS / Linux)
+npx -y @dobbylab/liftlens-agent use <id>   # switch runtime, e.g. `use qwen --key … --model …`
+npx -y @dobbylab/liftlens-agent runtimes   # list runtimes and their status
 ```
 
 ## Deploy
@@ -97,7 +97,9 @@ npx wrangler login
 scripts/deploy.sh             # builds the web app, packs the agent, deploys
 ```
 
-The deploy script also publishes the coach skills and a versioned agent tarball next to the app, so users can run the agent with `npx` without an npm account. Users of your deployment run that tarball on their own computers, so they trust the code you deploy; anyone who prefers not to can clone the repo and run `npm run agent` instead.
+The local agent is the npm package [`@dobbylab/liftlens-agent`](https://www.npmjs.com/package/@dobbylab/liftlens-agent). After changing `agent/`, run `scripts/publish-agent.sh` (bumps the version, bakes in `LIFTLENS_SITE`, publishes), commit `agent/package.json`, then deploy: `deploy.sh` refuses to deploy a web app that asks for an agent version not published from the current source. A fork without its own npm package can deploy with `SKIP_AGENT_CHECK=1`. The deploy also publishes the coach skills next to the app; running agents sync them automatically.
+
+Anyone who prefers not to run the published package can clone the repo and run `npm run agent` instead.
 
 ## Project structure
 

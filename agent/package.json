@@ -1,5 +1,5 @@
 {
-  "name": "liftlens-agent",
+  "name": "@dobbylab/liftlens-agent",
   "version": "0.1.0",
   "description": "LiftLens local coach bridge: lets the LiftLens web app use your own Claude Code / Codex / local models to review training videos (videos and logs never leave your devices)",
   "main": "src/server.mjs",
@@ -35,5 +35,14 @@
   ],
   "engines": {
     "node": ">=20"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dobbylabhq/liftlens.git",
+    "directory": "agent"
+  },
+  "homepage": "https://github.com/dobbylabhq/liftlens#readme",
+  "publishConfig": {
+    "access": "public"
   }
 }

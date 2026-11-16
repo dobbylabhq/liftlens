@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 // LiftLens local agent — one-line setup:
 //
-//   npx liftlens-agent            start + open the web app, auto-paired
-//   npx liftlens-agent install    run in the background, start at login (macOS launchd / Linux systemd --user)
-//   npx liftlens-agent status     health + runtime check
-//   npx liftlens-agent pair       re-open the pairing link (e.g. new browser)
-//   npx liftlens-agent uninstall  remove the background service
+//   npx @dobbylab/liftlens-agent  start + open the web app, auto-paired
+//   npx @dobbylab/liftlens-agent install    run in the background, start at login (macOS launchd / Linux systemd --user)
+//   npx @dobbylab/liftlens-agent status     health + runtime check
+//   npx @dobbylab/liftlens-agent pair       re-open the pairing link (e.g. new browser)
+//   npx @dobbylab/liftlens-agent uninstall  remove the background service
 //
 // Everything stays on this machine: the bridge binds to 127.0.0.1, the web app keeps
 // videos + logs in the browser, and coaching runs on the user's own Claude Code.
@@ -15,7 +15,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { AGENT_URL, BUILD, HOME, PORT, VERSION, WEB_URL, detectRuntimes, pairUrl, readToken, rotateToken } from './config.mjs'
+import { AGENT_URL, BUILD, HOME, PORT, RUN_CMD, VERSION, WEB_URL, detectRuntimes, pairUrl, readToken, rotateToken } from './config.mjs'
 import { coachesDir, syncCoaches, syncState } from './sync.mjs'
 import { listRuntimes, readConfig, runtimeById, writeConfig } from './runtimes.mjs'
 import { parseArgs } from 'node:util'
@@ -199,7 +199,7 @@ WantedBy=default.target
     execFileSync('systemctl', ['--user', 'enable', '--now', 'liftlens-agent.service'])
     ok('已注册为 systemd 用户服务（liftlens-agent.service）')
   } else {
-    bad('暂不支持在 Windows 上自动注册后台服务，请用 `npx liftlens-agent` 前台运行')
+    bad(`暂不支持在 Windows 上自动注册后台服务，请用 ${RUN_CMD} 前台运行`)
     return
   }
 
@@ -317,13 +317,13 @@ async function useCmd(args) {
 
 function help() {
   banner()
-  console.log(`  ${c.acid('npx liftlens-agent')}             启动并在浏览器自动配对
-  ${c.acid('npx liftlens-agent install')}     后台运行 + 开机自启（macOS / Linux）
-  ${c.acid('npx liftlens-agent status')}      查看运行状态
-  ${c.acid('npx liftlens-agent pair')}        重新打开配对链接（--rotate 重新生成配对码）
-  ${c.acid('npx liftlens-agent uninstall')}   移除后台服务
-  ${c.acid('npx liftlens-agent runtimes')}    列出可用的 agent / 模型（本地 + 云端）
-  ${c.acid('npx liftlens-agent use <id>')}    切换默认 agent，可带 --model --key --base-url --region --project
+  console.log(`  ${c.acid(`${RUN_CMD}`)}             启动并在浏览器自动配对
+  ${c.acid(`${RUN_CMD} install`)}     后台运行 + 开机自启（macOS / Linux）
+  ${c.acid(`${RUN_CMD} status`)}      查看运行状态
+  ${c.acid(`${RUN_CMD} pair`)}        重新打开配对链接（--rotate 重新生成配对码）
+  ${c.acid(`${RUN_CMD} uninstall`)}   移除后台服务
+  ${c.acid(`${RUN_CMD} runtimes`)}    列出可用的 agent / 模型（本地 + 云端）
+  ${c.acid(`${RUN_CMD} use <id>`)}    切换默认 agent，可带 --model --key --base-url --region --project
 
   环境变量：LIFTLENS_WEB_URL（网页地址，默认 ${WEB_URL}） · LIFTLENS_PORT（默认 4517） · LIFTLENS_MODEL（如 sonnet）
 `)

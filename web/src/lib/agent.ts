@@ -66,17 +66,17 @@ export const useAgent = create<AgentState>((set, get) => ({
 
 /**
  * The one-line command shown wherever the agent is missing.
- * Hosted site: the agent tarball is served next to the app, so `npx <origin>/agent/liftlens-agent.tgz`
- * works without an npm account. Local dev: run it from the repo.
+ * Hosted site: the agent is an npm package pinned to the version this web build expects.
+ * Local dev: run it from the repo.
  */
 const IS_LOCAL = ['localhost', '127.0.0.1'].includes(location.hostname)
 /** versioned tarball name → npx never reuses a stale cached copy */
-export const AGENT_CMD = IS_LOCAL ? 'node agent/src/cli.mjs' : `npx -y ${location.origin}/agent/liftlens-agent-${__AGENT_BUILD__}.tgz`
+export const AGENT_CMD = IS_LOCAL ? 'node agent/src/cli.mjs' : `npx -y ${__AGENT_PKG__}`
 /** true when the running local agent was built from different source than this web app expects */
 export const isAgentStale = (h: AgentHealth | null) => !IS_LOCAL && !!h && h.build !== __AGENT_BUILD__
 
 /**
- * One-click pairing: `npx liftlens-agent` opens `<web>/agent#pair=<token>&agent=<url>`.
+ * One-click pairing: `npx @dobbylab/liftlens-agent` opens `<web>/agent#pair=<token>&agent=<url>`.
  * The token lives in the URL *fragment*, so it is never sent to whatever server hosts the web app.
  */
 export async function consumePairFragment() {

@@ -4,8 +4,8 @@
 #   scripts/deploy.sh                       # worker "app" (name in wrangler.jsonc)
 #   SITE=https://liftlens.example.com scripts/deploy.sh   # custom domain (zone on the same account)
 #
-# What gets deployed is a static site: the web app + the local-agent tarball
-# (so users can run `npx -y https://<site>/agent/liftlens-agent.tgz` without an npm account).
+# What gets deployed is a static site: the web app and the coach skills (synced by local agents).
+# The local agent itself is published to npm by scripts/publish-agent.sh — run that first.
 # Videos and training logs never leave the user's browser; there is no backend.
 set -euo pipefail
 
@@ -35,6 +35,20 @@ esac
 deploy() { $WRANGLER deploy --config "$ROOT/wrangler.jsonc" ${DOMAIN_ARGS[@]+"${DOMAIN_ARGS[@]}"} 2>&1 | tee /dev/stderr | { grep -oE "https://[a-z0-9.-]+\.workers\.dev" || true; } | head -1; }
 echo "▸ site: $SITE"
 
+# 0) the local agent is an npm package (scripts/publish-agent.sh). The web app asks users to run the
+#    exact version in agent/package.json, so that version must already be published from this source.
+NAME="$(node -p 'require("./agent/package.json").name')"
+VERSION="$(node -p 'require("./agent/package.json").version')"
+BUILD="$(node -e 'import("./agent/src/build-id.mjs").then(m=>console.log(m.agentBuildId("agent/src")))')"
+PUB_BUILD="$(npm view "$NAME@$VERSION" liftlens.build 2>/dev/null || true)"
+if [ "$PUB_BUILD" != "$BUILD" ] && [ -z "${SKIP_AGENT_CHECK:-}" ]; then
+  echo "✗ $NAME@$VERSION on npm was not built from this agent/src (npm: ${PUB_BUILD:-missing}, local: $BUILD)"
+  echo "  run scripts/publish-agent.sh, commit agent/package.json, then deploy again"
+  echo "  (forks without their own npm package: SKIP_AGENT_CHECK=1 scripts/deploy.sh)"
+  exit 1
+fi
+echo "▸ agent: $NAME@$VERSION (build $BUILD)"
+
 # 2) build the web app
 echo "▸ build web"
 npm --prefix web run build
@@ -48,31 +62,14 @@ node scripts/keep-old-assets.mjs web/dist/assets .deploy-cache 8
 echo "▸ publish coach skills"
 node scripts/coaches-manifest.mjs coaches web/dist/coaches
 
-# 4) pack the local agent with the site URL baked in; versioned by source fingerprint
-BUILD="$(node -e 'import("./agent/src/build-id.mjs").then(m=>console.log(m.agentBuildId("agent/src")))')"
-echo "▸ pack agent build $BUILD (webUrl=$SITE)"
-TMP="$(mktemp -d)"
-cp -R agent/src agent/package.json "$TMP/"
-cp -R coaches "$TMP/coaches"
-node -e '
-  const fs=require("fs"),f=process.argv[1]+"/package.json",p=JSON.parse(fs.readFileSync(f));
-  p.liftlens={webUrl:process.argv[2]}; delete p.scripts.prepack; delete p.scripts.postpack;
-  fs.writeFileSync(f,JSON.stringify(p,null,2));' "$TMP" "$SITE"
-mkdir -p web/dist/agent
-(cd "$TMP" && npm pack --silent --pack-destination "$ROOT/web/dist/agent" >/dev/null)
-mv web/dist/agent/liftlens-agent-*.tgz "web/dist/agent/liftlens-agent-$BUILD.tgz"
-cp "web/dist/agent/liftlens-agent-$BUILD.tgz" web/dist/agent/liftlens-agent.tgz   # stable alias for old links
-echo "{\"build\":\"$BUILD\"}" > web/dist/agent/version.json
-rm -rf "$TMP"
-
-# 5) deploy (twice on the very first run: once to learn the URL, once with the agent tarball baked for it)
+# 5) deploy (twice on the very first run on workers.dev: once to learn the URL, once with it baked into the SEO tags)
 echo "▸ deploy"
 URL="$(deploy)"
 if [ -z "${SITE_FIXED:-}" ] && [ ${#DOMAIN_ARGS[@]} -eq 0 ] && [ -n "$URL" ] && [ "$URL" != "$SITE" ]; then
-  echo "▸ site URL is $URL — repacking agent for it"
+  echo "▸ site URL is $URL — rebuilding for it (also set LIFTLENS_SITE=$URL in .env)"
   SITE="$URL" SITE_FIXED=1 exec "$0"
 fi
 
 echo
 echo "✓ $SITE"
-echo "  local agent: npx -y $SITE/agent/liftlens-agent-$BUILD.tgz"
+echo "  local agent: npx -y $NAME@$VERSION"
