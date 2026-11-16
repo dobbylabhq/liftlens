@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { AnimatePresence, motion } from 'motion/react'
 import { Camera, Check, ChevronRight, ClipboardPaste, Flag, HardDrive, ImagePlus, Loader2, Minus, PencilLine, Plus, Radio, Search, Timer, Trash2 } from 'lucide-react'
-import { ExercisePicker } from '../components/ExercisePicker'
+import { ExerciseBrowser, ExercisePicker } from '../components/ExercisePicker'
 import { LiveSet, type LiveResult } from '../components/LiveSet'
 import { ALIAS_IDS, BIG3_IDS, getExercise, loadExercises, searchExercises } from '../lib/exercises'
 import { BIG3_PATTERN, refOf, type ExerciseRef } from '../lib/exerciseRef'
@@ -117,7 +117,7 @@ function PlanEditor() {
     })
   }, [params, setParams])
   const [text, setText] = useState('')
-  const [picker, setPicker] = useState<number | 'new' | null>(null)
+  const [picker, setPicker] = useState<number | null>(null)
   const last = useLiveQuery(() => db.workouts.orderBy('createdAt').last(), [])
   const upd = (i: number, patch: Partial<Row>) => setRows((rs) => rs.map((r, j) => (j === i ? { ...r, ...patch } : r)))
 
@@ -215,24 +215,22 @@ function PlanEditor() {
             )
           })}
         </AnimatePresence>
-        <div className="grid grid-cols-4 gap-2">
-          {(['bench', 'squat', 'deadlift'] as LiftId[]).map((l) => (
-            <button
-              key={l}
-              className="flex min-h-12 items-center justify-center gap-1 rounded-2xl border border-dashed border-line-2 text-sm text-mute hover:text-fg"
-              onClick={() => setRows((rs) => [...rs, { lift: l, name: PLAN_LIFTS[l], sets: 5, reps: 5, kg: '' }])}
-            >
-              <Plus size={14} /> {PLAN_LIFTS[l]}
-            </button>
-          ))}
-          <button
-            className="flex min-h-12 items-center justify-center gap-1 rounded-2xl border border-dashed border-acid/50 text-sm text-acid hover:bg-acid/5"
-            onClick={() => setPicker('new')}
-          >
-            <Search size={14} /> 动作库
-          </button>
-        </div>
       </div>
+
+      {/* exercise library right on the page: pick to add, keep picking for the next one */}
+      <section className="card mt-4 overflow-hidden" aria-label="添加动作">
+        <div className="kicker flex items-center gap-1.5 px-4 pt-4">
+          <Search size={12} /> 从动作库添加{rows.length ? `（已选 ${rows.length} 个）` : ''}
+        </div>
+        <ExerciseBrowser
+          className="flex flex-col"
+          listClassName="max-h-[min(420px,55dvh)]"
+          onPick={(ex) => {
+            setRows((rs) => [...rs, rowFromExercise(ex, rs.at(-1))])
+            toast.success(`已添加「${ex.zh || ex.name}」`)
+          }}
+        />
+      </section>
 
       <div className="mt-6 flex flex-wrap items-center gap-3">
         <button className="btn-acid h-12 px-6 text-base" disabled={!rows.length} onClick={start}>
@@ -247,8 +245,7 @@ function PlanEditor() {
         open={picker !== null}
         onClose={() => setPicker(null)}
         onSelect={(ex) => {
-          if (picker === 'new') setRows((rs) => [...rs, rowFromExercise(ex, rs.at(-1))])
-          else if (typeof picker === 'number') setRows((rs) => rs.map((r, j) => (j === picker ? rowFromExercise(ex, r) : r)))
+          if (typeof picker === 'number') setRows((rs) => rs.map((r, j) => (j === picker ? rowFromExercise(ex, r) : r)))
           setPicker(null)
         }}
       />

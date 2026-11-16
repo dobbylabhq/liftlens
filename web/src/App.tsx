@@ -6,7 +6,7 @@ import { Toaster } from 'sonner'
 import { AGENT_CMD, consumePairFragment, isAgentStale, useAgent } from './lib/agent'
 import { InstallHint } from './components/InstallHint'
 import { toast } from 'sonner'
-import { BookOpen, CalendarDays, ChevronRight, Library, Timer, TrendingUp, Upload } from 'lucide-react'
+import { BookOpen, CalendarDays, ChevronLeft, ChevronRight, Library, Timer, TrendingUp, Upload } from 'lucide-react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from './lib/db'
 import { isConfigured, providerById, useCloudConfigs, useCoachEngine } from './lib/cloud'
@@ -220,6 +220,7 @@ function Shell() {
         {/* safe-area padding + a solid strip above: content scrolling under the status bar must not show through */}
         <header className="sticky top-0 z-40 border-b border-line/70 bg-ink pt-[env(safe-area-inset-top)] before:pointer-events-none before:absolute before:inset-x-0 before:bottom-full before:h-40 before:bg-ink">
           <div className="mx-auto flex h-14 max-w-6xl items-center gap-2 px-4">
+            <BackButton />
             <NavLink to="/" className="mr-2 flex items-center gap-2 font-display text-lg font-extrabold tracking-tight">
               <svg viewBox="0 0 32 32" className="h-6 w-6">
                 <circle cx="9" cy="16" r="5" fill="none" stroke="#c8ff3d" strokeWidth="2.5" />
@@ -311,3 +312,36 @@ export const router = createBrowserRouter([
     ],
   },
 ])
+
+/**
+ * Sub-pages (not one of the main tabs) get a back arrow in the top bar: installed as an app there is
+ * no browser back button, and the iOS edge swipe can leave the site. Goes back within the site when
+ * there is history, otherwise to the page's parent.
+ */
+const PARENT: [RegExp, string, string?][] = [
+  [/^\/session\//, '/journal'],
+  [/^\/agent/, '/'],
+  [/^\/privacy/, '/'],
+  [/^\/lab\//, '/'],
+  // a main tab on desktop, a sub-page of training on phones
+  [/^\/new/, '/train', 'sm:hidden'],
+]
+
+function BackButton() {
+  const loc = useLocation()
+  const navigate = useNavigate()
+  const hit = PARENT.find(([re]) => re.test(loc.pathname))
+  if (!hit) return null
+  const [, parent, cls = ''] = hit
+  // react-router keeps the in-app history position in history.state.idx (0 = first page of this visit)
+  const canGoBack = ((window.history.state as { idx?: number } | null)?.idx ?? 0) > 0
+  return (
+    <button
+      aria-label="返回"
+      onClick={() => (canGoBack ? navigate(-1) : navigate(parent, { replace: true }))}
+      className={`-ml-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-mute hover:bg-panel-2 hover:text-fg ${cls}`}
+    >
+      <ChevronLeft size={22} />
+    </button>
+  )
+}

@@ -11,6 +11,7 @@ const isDesktop = () => typeof matchMedia !== 'undefined' && matchMedia('(min-wi
 
 /**
  * Exercise picker: a full-screen bottom sheet on mobile (swipe down to close), a centered dialog on desktop.
+ * The search / filter / list part is ExerciseBrowser, which pages can also embed inline.
  * The library is lazy-loaded on demand; search matches Chinese / English / partial words; ↑↓ Enter for keyboard selection.
  */
 export function ExercisePicker({ open, onClose, onSelect }: { open: boolean; onClose: () => void; onSelect: (ex: ExerciseInfo) => void }) {
@@ -19,6 +20,99 @@ export function ExercisePicker({ open, onClose, onSelect }: { open: boolean; onC
 }
 
 function Sheet({ onClose, onSelect }: { onClose: () => void; onSelect: (ex: ExerciseInfo) => void }) {
+  const desktop = useMemo(isDesktop, [])
+  const dragControls = useDragControls()
+
+  // Lock page scroll while open
+  useEffect(() => {
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = prev
+    }
+  }, [])
+
+  // Esc closes regardless of focus
+  useEffect(() => {
+    const h = (ev: globalThis.KeyboardEvent) => ev.key === 'Escape' && onClose()
+    document.addEventListener('keydown', h)
+    return () => document.removeEventListener('keydown', h)
+  }, [onClose])
+
+  const onDragEnd = (_: unknown, info: PanInfo) => {
+    if (info.offset.y > 120 || info.velocity.y > 600) onClose()
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-6">
+      <motion.div
+        className="absolute inset-0 bg-black/65 backdrop-blur-[2px]"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        onClick={onClose}
+        aria-hidden
+      />
+      <motion.div
+        role="dialog"
+        aria-modal="true"
+        aria-label="选择动作"
+        className="relative flex h-[calc(100dvh-env(safe-area-inset-top)-12px)] w-full min-w-0 flex-col overflow-hidden rounded-t-2xl border border-line bg-panel shadow-2xl sm:h-[min(760px,86dvh)] sm:max-w-xl sm:rounded-2xl"
+        initial={desktop ? { opacity: 0, y: 16, scale: 0.98 } : { y: '100%' }}
+        animate={desktop ? { opacity: 1, y: 0, scale: 1 } : { y: 0 }}
+        exit={desktop ? { opacity: 0, y: 10, scale: 0.98 } : { y: '100%' }}
+        transition={{ type: 'tween', ease: [0.16, 1, 0.3, 1], duration: desktop ? 0.22 : 0.36 }}
+        drag={desktop ? false : 'y'}
+        dragControls={dragControls}
+        dragListener={false}
+        dragConstraints={{ top: 0, bottom: 0 }}
+        dragElastic={{ top: 0, bottom: 0.8 }}
+        onDragEnd={onDragEnd}
+      >
+        {/* Header: on mobile the whole block can be swiped down to close */}
+        <div className="shrink-0 touch-none px-4 pt-2 sm:pt-4" onPointerDown={(e) => !desktop && dragControls.start(e)}>
+          <div className="mx-auto mb-2 h-1 w-10 rounded-full bg-line-2 sm:hidden" aria-hidden />
+          <div className="flex items-center gap-2">
+            <div className="min-w-0 flex-1">
+              <div className="kicker">EXERCISE LIBRARY</div>
+              <h2 className="font-display text-lg font-bold tracking-tight">选择动作</h2>
+            </div>
+            <button aria-label="关闭" onClick={onClose} className="-mr-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-mute hover:bg-panel-2 hover:text-fg">
+              <X size={20} />
+            </button>
+          </div>
+        </div>
+        <ExerciseBrowser
+          autoFocusDelay={desktop ? 0 : 280}
+          onPick={(e) => {
+            onSelect(e)
+            onClose()
+          }}
+          listClassName="min-h-0 flex-1 pb-[env(safe-area-inset-bottom)]"
+        />
+      </motion.div>
+    </div>
+  )
+}
+
+/**
+ * Search box + body-part / equipment filters + exercise list. Used inside the picker sheet and inline
+ * on the training plan page (where picking adds an exercise and the browser stays open for the next one).
+ */
+export function ExerciseBrowser({
+  onPick,
+  autoFocusDelay,
+  listClassName,
+  className = 'flex min-h-0 flex-1 flex-col',
+}: {
+  onPick: (ex: ExerciseInfo) => void
+  /** focus the search box after this many ms; omit to leave focus alone */
+  autoFocusDelay?: number
+  /** sizing of the scrolling list, e.g. `max-h-96` inline or `flex-1` in a sheet */
+  listClassName: string
+  className?: string
+}) {
   const [list, setList] = useState<ExerciseInfo[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [query, setQuery] = useState('')
@@ -27,8 +121,6 @@ function Sheet({ onClose, onSelect }: { onClose: () => void; onSelect: (ex: Exer
   const [analyzableOnly, setAnalyzableOnly] = useState(false)
   const [limit, setLimit] = useState(PAGE)
   const [active, setActive] = useState(0)
-  const desktop = useMemo(isDesktop, [])
-  const dragControls = useDragControls()
   const inputRef = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
   const sentinelRef = useRef<HTMLDivElement>(null)
@@ -42,16 +134,11 @@ function Sheet({ onClose, onSelect }: { onClose: () => void; onSelect: (ex: Exer
   }, [])
   useEffect(load, [load])
 
-  // Lock page scroll and focus the search box when opened
   useEffect(() => {
-    const prev = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    const t = setTimeout(() => inputRef.current?.focus({ preventScroll: true }), desktop ? 0 : 280)
-    return () => {
-      document.body.style.overflow = prev
-      clearTimeout(t)
-    }
-  }, [desktop])
+    if (autoFocusDelay == null) return
+    const t = setTimeout(() => inputRef.current?.focus({ preventScroll: true }), autoFocusDelay)
+    return () => clearTimeout(t)
+  }, [autoFocusDelay])
 
   const deferredQuery = useDeferredValue(query)
   const filtering = !!(deferredQuery.trim() || bodyPart || equipment || analyzableOnly)
@@ -96,22 +183,10 @@ function Sheet({ onClose, onSelect }: { onClose: () => void; onSelect: (ex: Exer
     return () => io.disconnect()
   }, [list, results.length, limit])
 
-  const pick = (e: ExerciseInfo) => {
-    onSelect(e)
-    onClose()
-  }
-
   const scrollToActive = (i: number) => {
     const el = listRef.current?.querySelector<HTMLElement>(`[data-idx="${i}"]`)
     el?.scrollIntoView({ block: 'nearest' })
   }
-
-  // Esc closes regardless of focus
-  useEffect(() => {
-    const h = (ev: globalThis.KeyboardEvent) => ev.key === 'Escape' && onClose()
-    document.addEventListener('keydown', h)
-    return () => document.removeEventListener('keydown', h)
-  }, [onClose])
 
   const onKeyDown = (ev: KeyboardEvent<HTMLInputElement>) => {
     if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp') {
@@ -125,13 +200,9 @@ function Sheet({ onClose, onSelect }: { onClose: () => void; onSelect: (ex: Exer
       const e = shown[active]
       if (e) {
         ev.preventDefault()
-        pick(e)
+        onPick(e)
       }
     }
-  }
-
-  const onDragEnd = (_: unknown, info: PanInfo) => {
-    if (info.offset.y > 120 || info.velocity.y > 600) onClose()
   }
 
   const clearFilters = () => {
@@ -144,144 +215,105 @@ function Sheet({ onClose, onSelect }: { onClose: () => void; onSelect: (ex: Exer
   const commonCount = filtering ? 0 : common.length
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-6">
-      <motion.div
-        className="absolute inset-0 bg-black/65 backdrop-blur-[2px]"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.2 }}
-        onClick={onClose}
-        aria-hidden
-      />
-      <motion.div
-        role="dialog"
-        aria-modal="true"
-        aria-label="选择动作"
-        className="relative flex h-[calc(100dvh-env(safe-area-inset-top)-12px)] w-full min-w-0 flex-col overflow-hidden rounded-t-2xl border border-line bg-panel shadow-2xl sm:h-[min(760px,86dvh)] sm:max-w-xl sm:rounded-2xl"
-        initial={desktop ? { opacity: 0, y: 16, scale: 0.98 } : { y: '100%' }}
-        animate={desktop ? { opacity: 1, y: 0, scale: 1 } : { y: 0 }}
-        exit={desktop ? { opacity: 0, y: 10, scale: 0.98 } : { y: '100%' }}
-        transition={{ type: 'tween', ease: [0.16, 1, 0.3, 1], duration: desktop ? 0.22 : 0.36 }}
-        drag={desktop ? false : 'y'}
-        dragControls={dragControls}
-        dragListener={false}
-        dragConstraints={{ top: 0, bottom: 0 }}
-        dragElastic={{ top: 0, bottom: 0.8 }}
-        onDragEnd={onDragEnd}
-      >
-        {/* Header: on mobile the whole block can be swiped down to close */}
-        <div className="shrink-0 touch-none border-b border-line px-4 pb-3 pt-2 sm:pt-4" onPointerDown={(e) => !desktop && dragControls.start(e)}>
-          <div className="mx-auto mb-2 h-1 w-10 rounded-full bg-line-2 sm:hidden" aria-hidden />
-          <div className="flex items-center gap-2">
-            <div className="min-w-0 flex-1">
-              <div className="kicker">EXERCISE LIBRARY</div>
-              <h2 className="font-display text-lg font-bold tracking-tight">选择动作</h2>
-            </div>
-            <button aria-label="关闭" onClick={onClose} className="-mr-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-mute hover:bg-panel-2 hover:text-fg">
-              <X size={20} />
+    <div className={className}>
+      <div className="relative shrink-0 border-b border-line px-4 pb-3 pt-2">
+        <Search size={16} className="pointer-events-none absolute left-7 top-[calc(50%-2px)] -translate-y-1/2 text-dim" />
+        <input
+          ref={inputRef}
+          className="input pl-9 pr-10 text-base sm:text-sm"
+          placeholder="搜索：卧推、哑铃弯举、row、rdl…"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={onKeyDown}
+          enterKeyHint="search"
+          autoComplete="off"
+          autoCorrect="off"
+          spellCheck={false}
+          role="combobox"
+          aria-expanded="true"
+          aria-controls={listId}
+          aria-autocomplete="list"
+          aria-activedescendant={shown.length ? optionId(active) : undefined}
+        />
+        {query && (
+          <button aria-label="清空搜索" onClick={() => (setQuery(''), inputRef.current?.focus())} className="absolute right-4 top-2 flex h-11 w-11 items-center justify-center text-dim hover:text-fg">
+            <X size={15} />
+          </button>
+        )}
+      </div>
+
+      {/* Filters: two rows of horizontally scrolling chips */}
+      <div className="shrink-0 space-y-1.5 border-b border-line py-2">
+        <ChipRow>
+          <Chip on={analyzableOnly} onClick={() => setAnalyzableOnly((v) => !v)} accent>
+            <Video size={12} /> 可视频分析
+          </Chip>
+          <Chip on={!bodyPart} onClick={() => setBodyPart(undefined)}>
+            全部部位
+          </Chip>
+          {BODY_PART_ORDER.filter((b) => b in BODY_PART_ZH).map((b) => (
+            <Chip key={b} on={bodyPart === b} onClick={() => setBodyPart(bodyPart === b ? undefined : b)}>
+              {BODY_PART_ZH[b]}
+            </Chip>
+          ))}
+        </ChipRow>
+        <ChipRow>
+          <Chip on={!equipment} onClick={() => setEquipment(undefined)}>
+            全部器械
+          </Chip>
+          {equipmentOptions.map((q) => (
+            <Chip key={q} on={equipment === q} onClick={() => setEquipment(equipment === q ? undefined : q)}>
+              {EQUIPMENT_ZH[q] ?? q}
+            </Chip>
+          ))}
+        </ChipRow>
+      </div>
+
+      {/* List */}
+      <div ref={listRef} id={listId} role="listbox" aria-label="动作" className={`overflow-y-auto overscroll-contain ${listClassName}`}>
+        {error ? (
+          <div className="flex flex-col items-center gap-3 px-6 py-16 text-center text-sm text-mute">
+            {error}
+            <button className="btn-ghost h-10" onClick={load}>
+              重试
             </button>
           </div>
-          <div className="relative mt-2" onPointerDown={(e) => e.stopPropagation()}>
-            <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-dim" />
-            <input
-              ref={inputRef}
-              className="input pl-9 pr-10 text-base sm:text-sm"
-              placeholder="搜索：卧推、哑铃弯举、row、rdl…"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={onKeyDown}
-              enterKeyHint="search"
-              autoComplete="off"
-              autoCorrect="off"
-              spellCheck={false}
-              role="combobox"
-              aria-expanded="true"
-              aria-controls={listId}
-              aria-autocomplete="list"
-              aria-activedescendant={shown.length ? optionId(active) : undefined}
-            />
-            {query && (
-              <button aria-label="清空搜索" onClick={() => (setQuery(''), inputRef.current?.focus())} className="absolute right-0 top-0 flex h-11 w-11 items-center justify-center text-dim hover:text-fg">
-                <X size={15} />
-              </button>
-            )}
+        ) : !list ? (
+          <div className="flex items-center justify-center gap-2 py-16 text-sm text-mute">
+            <Loader2 size={16} className="animate-spin" /> 加载动作库…
           </div>
-        </div>
-
-        {/* Filters: two rows of horizontally scrolling chips, scrolling only inside the sheet */}
-        <div className="shrink-0 space-y-1.5 border-b border-line py-2" onPointerDown={(e) => e.stopPropagation()}>
-          <ChipRow>
-            <Chip on={analyzableOnly} onClick={() => setAnalyzableOnly((v) => !v)} accent>
-              <Video size={12} /> 可视频分析
-            </Chip>
-            <Chip on={!bodyPart} onClick={() => setBodyPart(undefined)}>
-              全部部位
-            </Chip>
-            {BODY_PART_ORDER.filter((b) => b in BODY_PART_ZH).map((b) => (
-              <Chip key={b} on={bodyPart === b} onClick={() => setBodyPart(bodyPart === b ? undefined : b)}>
-                {BODY_PART_ZH[b]}
-              </Chip>
-            ))}
-          </ChipRow>
-          <ChipRow>
-            <Chip on={!equipment} onClick={() => setEquipment(undefined)}>
-              全部器械
-            </Chip>
-            {equipmentOptions.map((q) => (
-              <Chip key={q} on={equipment === q} onClick={() => setEquipment(equipment === q ? undefined : q)}>
-                {EQUIPMENT_ZH[q] ?? q}
-              </Chip>
-            ))}
-          </ChipRow>
-        </div>
-
-        {/* List */}
-        <div ref={listRef} id={listId} role="listbox" aria-label="动作" className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-[env(safe-area-inset-bottom)]">
-          {error ? (
-            <div className="flex flex-col items-center gap-3 px-6 py-16 text-center text-sm text-mute">
-              {error}
-              <button className="btn-ghost h-10" onClick={load}>
-                重试
-              </button>
-            </div>
-          ) : !list ? (
-            <div className="flex items-center justify-center gap-2 py-16 text-sm text-mute">
-              <Loader2 size={16} className="animate-spin" /> 加载动作库…
-            </div>
-          ) : (
-            <>
-              {!filtering && (
-                <>
-                  <SectionTitle>常用</SectionTitle>
-                  {common.map((e, i) => (
-                    <Row key={`c-${e.id}`} e={e} idx={i} id={optionId(i)} active={active === i} onHover={setActive} onPick={pick} />
-                  ))}
-                  <SectionTitle>全部动作 · {results.length}</SectionTitle>
-                </>
-              )}
-              {filtering && results.length > 0 && <SectionTitle>{results.length} 个结果</SectionTitle>}
-              {results.slice(0, limit).map((e, j) => {
-                const i = commonCount + j
-                return <Row key={e.id} e={e} idx={i} id={optionId(i)} active={active === i} onHover={setActive} onPick={pick} />
-              })}
-              {filtering && results.length === 0 && (
-                <div className="flex flex-col items-center gap-2 px-6 py-14 text-center">
-                  <SearchX size={28} className="text-dim" />
-                  <div className="font-semibold">没找到{query.trim() ? `「${query.trim()}」` : '符合条件的动作'}</div>
-                  <p className="max-w-xs text-sm text-mute">试试更短的词，比如「卧推」「弯举」「row」，或者换个器械 / 部位。</p>
-                  {(bodyPart || equipment || analyzableOnly) && (
-                    <button className="btn-ghost mt-2 h-10" onClick={clearFilters}>
-                      清除筛选
-                    </button>
-                  )}
-                </div>
-              )}
-              <div ref={sentinelRef} className="h-px" aria-hidden />
-            </>
-          )}
-        </div>
-      </motion.div>
+        ) : (
+          <>
+            {!filtering && (
+              <>
+                <SectionTitle>常用</SectionTitle>
+                {common.map((e, i) => (
+                  <Row key={`c-${e.id}`} e={e} idx={i} id={optionId(i)} active={active === i} onHover={setActive} onPick={onPick} />
+                ))}
+                <SectionTitle>全部动作 · {results.length}</SectionTitle>
+              </>
+            )}
+            {filtering && results.length > 0 && <SectionTitle>{results.length} 个结果</SectionTitle>}
+            {results.slice(0, limit).map((e, j) => {
+              const i = commonCount + j
+              return <Row key={e.id} e={e} idx={i} id={optionId(i)} active={active === i} onHover={setActive} onPick={onPick} />
+            })}
+            {filtering && results.length === 0 && (
+              <div className="flex flex-col items-center gap-2 px-6 py-14 text-center">
+                <SearchX size={28} className="text-dim" />
+                <div className="font-semibold">没找到{query.trim() ? `「${query.trim()}」` : '符合条件的动作'}</div>
+                <p className="max-w-xs text-sm text-mute">试试更短的词，比如「卧推」「弯举」「row」，或者换个器械 / 部位。</p>
+                {(bodyPart || equipment || analyzableOnly) && (
+                  <button className="btn-ghost mt-2 h-10" onClick={clearFilters}>
+                    清除筛选
+                  </button>
+                )}
+              </div>
+            )}
+            <div ref={sentinelRef} className="h-px" aria-hidden />
+          </>
+        )}
+      </div>
     </div>
   )
 }

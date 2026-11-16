@@ -40,6 +40,8 @@ export function InstallHint() {
 
   useEffect(() => {
     const onPrompt = (e: Event) => {
+      // desktop / dismissed: leave the browser's own install UI alone
+      if (!touch() || dismissed()) return
       e.preventDefault()
       setPrompt(e as BeforeInstallPromptEvent)
     }
